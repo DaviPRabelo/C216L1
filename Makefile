@@ -41,6 +41,12 @@ test-v:
 test-cov:
 	cd $(BACKEND_DIR) && $(POETRY) run pytest --cov=app --cov-report=term-missing
 
+lint:
+	cd $(BACKEND_DIR) && $(POETRY) run ruff check .
+
+format:
+	cd $(BACKEND_DIR) && $(POETRY) run ruff format .
+
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name ".pytest_cache" -exec rm -rf {} +

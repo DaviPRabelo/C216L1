@@ -38,3 +38,28 @@ jobs:
 
       - name: Executar os testes
         run: poetry run pytest --cov=app --cov-report=term-missing
+  
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Clonar o repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar o Poetry
+        run: pipx install poetry
+
+      - name: Configurar o Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: poetry
+          cache-dependency-path: backend/poetry.lock
+
+      - name: Instalar as dependências
+        run: poetry install --no-root
+
+      - name: Verificar o lint com Ruff
+        run: poetry run ruff check .

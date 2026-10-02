@@ -1,7 +1,7 @@
 import pytest
 
-from app import services
 from app.errors import DadosInvalidos, ItemNaoEncontrado
+from app.services import item as services
 
 
 def test_criar_item_valido(repo):

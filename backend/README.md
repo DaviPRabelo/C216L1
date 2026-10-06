@@ -37,40 +37,31 @@ make docker-down    # derruba os containers
 ## Executando os testes
 
 ```bash
-make test
+make test               # suíte completa
+make test-unit          # apenas unitários
+make test-integration   # apenas integração
+make test-cov           # com relatório de cobertura
 ```
 
-Modo verboso, mostrando cada teste individualmente:
-
-```bash
-make test-v
-```
-
-Com relatório de cobertura por arquivo:
-
-```bash
-make test-cov
-```
-
-Para rodar um arquivo ou um teste específico, use o Pytest direto:
+Para rodar um teste específico:
 
 ```bash
 cd backend
-python -m poetry run pytest tests/test_services.py
-python -m poetry run pytest -k "invalido"
+python -m poetry run pytest tests/unit -k "invalido"
 ```
 
 ### Organização dos testes
 
-Os testes ficam em `backend/tests/`:
+A suíte é dividida em dois níveis da pirâmide:
 
-| Arquivo | Conteúdo |
-|---|---|
-| `conftest.py` | fixtures compartilhadas (`repo`, `repo_com_itens`) |
-| `test_services.py` | testes unitários da camada de serviço |
+| Pasta | Tipo | O que exercita |
+|---|---|---|
+| `tests/unit/` | unitários | camada de serviço, sem HTTP |
+| `tests/integration/` | integração | todos os endpoints, via `TestClient` |
 
-São 9 funções de teste, que geram 13 casos — a função de validação é parametrizada
-com 5 combinações inválidas.
+São 28 testes: 13 unitários e 15 de integração. Fixtures compartilhadas ficam em
+`tests/conftest.py`; a do `TestClient`, com repositório isolado por teste, em
+`tests/integration/conftest.py`.
 
 ## Lint
 
@@ -92,12 +83,30 @@ em dois jobs paralelos:
 ```
 backend/
 ├── app/
-│   ├── errors.py       # exceções de domínio
-│   ├── models.py       # modelos Pydantic
-│   ├── repository.py   # armazenamento em memória
-│   ├── services.py     # regras de negócio
-│   └── main.py         # endpoints FastAPI
+│   ├── main.py              # apenas inicialização e inclusão de routers
+│   ├── api/routes/
+│   │   └── itens.py         # endpoints do recurso
+│   ├── schemas/
+│   │   └── item.py          # modelos Pydantic
+│   ├── services/
+│   │   └── item.py          # regras de negócio
+│   ├── repository.py        # armazenamento em memória
+│   └── errors.py            # exceções de domínio
 └── tests/
     ├── conftest.py
-    └── test_services.py
+    ├── unit/
+    └── integration/
 ```
+
+## Endpoints
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/itens` | lista itens; aceita `?nome_contem=` |
+| `GET` | `/itens/{item_id}` | busca por id |
+| `POST` | `/itens` | cria um item |
+| `PUT` | `/itens/{item_id}` | substitui o item inteiro |
+| `PATCH` | `/itens/{item_id}` | atualiza apenas os campos informados |
+| `DELETE` | `/itens/{item_id}` | remove o item |
+
+Documentação interativa em `http://localhost:8000/docs`.

@@ -20,7 +20,8 @@ dev = [
     "pytest (>=9.1.1,<10.0.0)",
     "httpx2 (>=2.13.0,<3.0.0)",
     "pytest-cov (>=7.1.0,<8.0.0)",
-    "ruff (>=0.16.8,<0.17.0)"
+    "ruff (>=0.16.8,<0.17.0)",
+    "httpx (>=0.28.1,<0.29.0)"
 ]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -32,3 +33,11 @@ exclude = [".venv", "__pycache__"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+]

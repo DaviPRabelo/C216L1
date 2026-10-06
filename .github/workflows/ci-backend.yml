@@ -36,9 +36,12 @@ jobs:
       - name: Instalar as dependências
         run: poetry install --no-root
 
-      - name: Executar os testes
-        run: poetry run pytest --cov=app --cov-report=term-missing
-  
+      - name: Executar os testes unitários
+        run: poetry run pytest tests/unit --cov=app --cov-report=term
+
+      - name: Executar os testes de integração
+        run: poetry run pytest tests/integration --cov=app --cov-append --cov-report=term-missing
+
   lint:
     runs-on: ubuntu-latest
     defaults:

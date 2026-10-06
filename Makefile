@@ -47,6 +47,12 @@ lint:
 format:
 	cd $(BACKEND_DIR) && $(POETRY) run ruff format .
 
+test-unit:
+	cd $(BACKEND_DIR) && $(POETRY) run pytest tests/unit
+
+test-integration:
+	cd $(BACKEND_DIR) && $(POETRY) run pytest tests/integration
+
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name ".pytest_cache" -exec rm -rf {} +

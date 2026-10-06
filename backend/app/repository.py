@@ -1,4 +1,4 @@
-from app.models import Item
+from app.schemas.item import Item
 
 
 class RepositorioDeItens:
@@ -22,3 +22,9 @@ class RepositorioDeItens:
 
     def remover(self, item_id: int) -> bool:
         return self._itens.pop(item_id, None) is not None
+
+    def salvar(self, item: Item) -> Item:
+        """Grava um item já existente, preservando o id."""
+        self._itens[item.id] = item
+        return item
+

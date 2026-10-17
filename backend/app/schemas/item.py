@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ItemEntrada(BaseModel):
@@ -16,6 +16,8 @@ class ItemAtualizacaoParcial(BaseModel):
 
 
 class Item(ItemEntrada):
-    """Representação completa, com o identificador."""
+    """Resposta da API. Convertida a partir do modelo ORM."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: int

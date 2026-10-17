@@ -1,6 +1,6 @@
 from app.errors import DadosInvalidos, ItemNaoEncontrado
-from app.repository import RepositorioDeItens
-from app.schemas.item import Item
+from app.models.item import ItemORM
+from app.repositories.item import RepositorioDeItens
 
 PRECO_MAXIMO = 1_000_000
 
@@ -16,30 +16,28 @@ def _validar(nome: str, preco: float) -> str:
     return nome
 
 
-def criar_item(repo: RepositorioDeItens, nome: str, preco: float) -> Item:
+def criar_item(repo: RepositorioDeItens, nome: str, preco: float) -> ItemORM:
     nome = _validar(nome, preco)
     return repo.adicionar(nome, preco)
 
 
-def obter_item(repo: RepositorioDeItens, item_id: int) -> Item:
+def obter_item(repo: RepositorioDeItens, item_id: int) -> ItemORM:
     item = repo.buscar(item_id)
     if item is None:
         raise ItemNaoEncontrado(item_id)
     return item
 
 
-def listar_itens(repo: RepositorioDeItens, nome_contem: str | None = None) -> list[Item]:
-    itens = repo.listar()
-    if nome_contem:
-        termo = nome_contem.lower()
-        itens = [item for item in itens if termo in item.nome.lower()]
-    return itens
+def listar_itens(repo: RepositorioDeItens, nome_contem: str | None = None) -> list[ItemORM]:
+    return repo.listar(nome_contem)
 
 
-def substituir_item(repo: RepositorioDeItens, item_id: int, nome: str, preco: float) -> Item:
-    obter_item(repo, item_id)
+def substituir_item(
+    repo: RepositorioDeItens, item_id: int, nome: str, preco: float
+) -> ItemORM:
+    item = obter_item(repo, item_id)
     nome = _validar(nome, preco)
-    return repo.salvar(Item(id=item_id, nome=nome, preco=preco))
+    return repo.atualizar(item, nome, preco)
 
 
 def atualizar_item(
@@ -47,12 +45,12 @@ def atualizar_item(
     item_id: int,
     nome: str | None = None,
     preco: float | None = None,
-) -> Item:
+) -> ItemORM:
     atual = obter_item(repo, item_id)
     novo_nome = atual.nome if nome is None else nome
     novo_preco = atual.preco if preco is None else preco
     novo_nome = _validar(novo_nome, novo_preco)
-    return repo.salvar(Item(id=item_id, nome=novo_nome, preco=novo_preco))
+    return repo.atualizar(atual, novo_nome, novo_preco)
 
 
 def remover_item(repo: RepositorioDeItens, item_id: int) -> None:

@@ -25,6 +25,12 @@ help:
 	@echo "    make docker-down   - Derruba os containers"
 	@echo "    make docker-logs   - Acompanha os logs"
 	@echo "    make docker-ps     - Lista o status dos containers"
+	@echo "    make up-build      - Alias de docker-build"
+	@echo ""
+	@echo "  Banco de dados:"
+	@echo "    make migrate       - Aplica as migrations (alembic upgrade head)"
+	@echo "    make migration m=\"msg\" - Gera uma migration nova"
+	@echo "    make db-shell      - Abre o psql no container do PostgreSQL"
 
 install:
 	cd $(BACKEND_DIR) && $(POETRY) install
@@ -72,3 +78,16 @@ docker-build:
 
 docker-ps:
 	docker compose ps
+
+# Alias exigido pelo roteiro da prática
+up-build: docker-build
+
+migrate:
+	cd $(BACKEND_DIR) && $(POETRY) run alembic upgrade head
+
+migration:
+	cd $(BACKEND_DIR) && $(POETRY) run alembic revision --autogenerate -m "$(m)"
+
+db-shell:
+	docker exec -it c216_postgres psql -U admin -d c216_db
+

@@ -1,18 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
 
+from app.database import get_session
 from app.errors import DadosInvalidos, ItemNaoEncontrado
-from app.repository import RepositorioDeItens
+from app.repositories.item import RepositorioDeItens
 from app.schemas.item import Item, ItemAtualizacaoParcial, ItemEntrada
 from app.services import item as servico
 
 router = APIRouter(prefix="/itens", tags=["itens"])
 
-_repositorio = RepositorioDeItens()
 
-
-def obter_repositorio() -> RepositorioDeItens:
-    """Dependência do repositório. Os testes a sobrescrevem para isolar o estado."""
-    return _repositorio
+def obter_repositorio(sessao: Session = Depends(get_session)) -> RepositorioDeItens:
+    """Monta o repositório sobre a sessão da requisição."""
+    return RepositorioDeItens(sessao)
 
 
 @router.get("", response_model=list[Item])

@@ -15,3 +15,5 @@ htmlcov/
 *.swo
 .DS_Store
 Thumbs.db
+# o exemplo deve ser versionado
+!.env.example

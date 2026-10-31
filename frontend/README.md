@@ -44,11 +44,11 @@ cd frontend && npx playwright install chromium
 
 ### Os três níveis
 
-| Pasta | Nível | Ferramenta | O que exercita |
-|---|---|---|---|
-| `tests/unit/` | unitário | Vitest | funções puras de validação, sem DOM |
-| `tests/integration/` | integração | Vitest + Testing Library | componentes renderizados, com interação do usuário |
-| `e2e/` | ponta a ponta | Playwright | fluxo completo em Chromium, sobre o bundle buildado |
+| Pasta                | Nível         | Ferramenta               | O que exercita                                      |
+| -------------------- | ------------- | ------------------------ | --------------------------------------------------- |
+| `tests/unit/`        | unitário      | Vitest                   | funções puras de validação, sem DOM                 |
+| `tests/integration/` | integração    | Vitest + Testing Library | componentes renderizados, com interação do usuário  |
+| `e2e/`               | ponta a ponta | Playwright               | fluxo completo em Chromium, sobre o bundle buildado |
 
 São 51 testes no Vitest e 5 no Playwright.
 
@@ -108,10 +108,10 @@ frontend/
 
 ## Campos do produto
 
-| Campo | Tipo | Validação |
-|---|---|---|
-| nome | texto | obrigatório, até 60 caracteres |
-| categoria | seleção | obrigatório, entre as cinco disponíveis |
-| quantidade | número | inteiro, de 1 a 9999 |
-| preço | número | de 0 a 1.000.000 |
-| descrição | texto | opcional, até 200 caracteres |
+| Campo      | Tipo    | Validação                               |
+| ---------- | ------- | --------------------------------------- |
+| nome       | texto   | obrigatório, até 60 caracteres          |
+| categoria  | seleção | obrigatório, entre as cinco disponíveis |
+| quantidade | número  | inteiro, de 1 a 9999                    |
+| preço      | número  | de 0 a 1.000.000                        |
+| descrição  | texto   | opcional, até 200 caracteres            |

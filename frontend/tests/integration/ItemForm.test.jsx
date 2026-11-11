@@ -105,4 +105,14 @@ describe("ItemForm", () => {
 
     expect(screen.queryAllByRole("alert")).toHaveLength(0);
   });
+  it("mantém os valores digitados quando o envio falha", async () => {
+    const usuario = userEvent.setup();
+    const aoAdicionar = vi.fn().mockRejectedValue(new Error("Já existe um item com esse nome"));
+    render(<ItemForm onAdicionar={aoAdicionar} />);
+
+    await preencher(usuario);
+    await usuario.click(screen.getByRole("button", BOTAO));
+
+    expect(screen.getByLabelText("Nome")).toHaveValue("Teclado");
+  });
 });

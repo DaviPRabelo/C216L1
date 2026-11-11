@@ -1,85 +1,136 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import ItemsPage from "../../src/pages/ItemsPage.jsx";
+import { createItem, deleteItem, listItems } from "../../src/services/items.js";
 
-async function cadastrar(
-  usuario,
-  { nome, categoria = "Periféricos", quantidade = "2", preco = "150" },
-) {
+vi.mock("../../src/services/items.js", () => ({
+  listItems: vi.fn(),
+  createItem: vi.fn(),
+  deleteItem: vi.fn(),
+}));
+
+const TECLADO = {
+  id: 1,
+  nome: "Teclado",
+  descricao: "Mecânico",
+  categoria: "Periféricos",
+  quantidade: 2,
+  preco: 150,
+};
+
+async function preencherFormulario(usuario, nome = "Monitor") {
   await usuario.type(screen.getByLabelText("Nome"), nome);
-  await usuario.selectOptions(screen.getByLabelText("Categoria"), categoria);
-
-  const campoQuantidade = screen.getByLabelText("Quantidade");
-  await usuario.clear(campoQuantidade);
-  await usuario.type(campoQuantidade, quantidade);
-
-  await usuario.type(screen.getByLabelText("Preço"), preco);
+  await usuario.selectOptions(screen.getByLabelText("Categoria"), "Eletrônicos");
+  const quantidade = screen.getByLabelText("Quantidade");
+  await usuario.clear(quantidade);
+  await usuario.type(quantidade, "3");
+  await usuario.type(screen.getByLabelText("Preço"), "900");
   await usuario.click(screen.getByRole("button", { name: "Cadastrar produto" }));
 }
 
-describe("ItemsPage", () => {
-  it("começa sem produtos", () => {
+beforeEach(() => {
+  vi.clearAllMocks();
+  listItems.mockResolvedValue([]);
+});
+
+describe("ItemsPage — carregamento", () => {
+  it("exibe o estado de carregando antes da resposta", () => {
+    listItems.mockReturnValue(new Promise(() => {}));
     render(<ItemsPage />);
 
-    expect(screen.getByText("Nenhum produto cadastrado ainda.")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Produtos (0)" })).toBeInTheDocument();
+    expect(screen.getByText("Carregando produtos...")).toBeInTheDocument();
   });
 
-  it("mostra o produto cadastrado com categoria e preço", async () => {
-    const usuario = userEvent.setup();
+  it("mostra os produtos vindos da API", async () => {
+    listItems.mockResolvedValue([TECLADO]);
     render(<ItemsPage />);
 
-    await cadastrar(usuario, { nome: "Teclado", categoria: "Periféricos", preco: "150" });
-
+    expect(await screen.findByRole("heading", { name: "Teclado" })).toBeInTheDocument();
     const catalogo = screen.getByRole("list");
-    expect(within(catalogo).getByRole("heading", { name: "Teclado" })).toBeInTheDocument();
     expect(within(catalogo).getByText("Periféricos")).toBeInTheDocument();
-    expect(within(catalogo).getByText("R$ 150,00")).toBeInTheDocument();
-    expect(screen.queryByText("Nenhum produto cadastrado ainda.")).not.toBeInTheDocument();
-  });
-
-  it("calcula o valor em estoque somando quantidade × preço", async () => {
-    const usuario = userEvent.setup();
-    render(<ItemsPage />);
-
-    await cadastrar(usuario, { nome: "Teclado", quantidade: "2", preco: "150" });
-    await cadastrar(usuario, { nome: "Monitor", quantidade: "3", preco: "900" });
-
-    expect(screen.getByText("R$ 3000,00")).toBeInTheDocument();
-    expect(screen.getByText(/5 unidades/)).toBeInTheDocument();
-  });
-
-  it("atualiza o contador a cada produto", async () => {
-    const usuario = userEvent.setup();
-    render(<ItemsPage />);
-
-    await cadastrar(usuario, { nome: "Teclado" });
-    await cadastrar(usuario, { nome: "Monitor" });
-
-    expect(screen.getByRole("heading", { name: "Produtos (2)" })).toBeInTheDocument();
-  });
-
-  it("remove apenas o produto escolhido", async () => {
-    const usuario = userEvent.setup();
-    render(<ItemsPage />);
-    await cadastrar(usuario, { nome: "Teclado" });
-    await cadastrar(usuario, { nome: "Monitor" });
-
-    await usuario.click(screen.getByRole("button", { name: "Remover Teclado" }));
-
-    expect(screen.queryByRole("heading", { name: "Teclado" })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Monitor" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Produtos (1)" })).toBeInTheDocument();
   });
 
-  it("volta ao estado vazio quando tudo é removido", async () => {
-    const usuario = userEvent.setup();
+  it("mostra o catálogo vazio quando a API não devolve nada", async () => {
     render(<ItemsPage />);
-    await cadastrar(usuario, { nome: "Teclado" });
+
+    expect(await screen.findByText("Nenhum produto cadastrado ainda.")).toBeInTheDocument();
+  });
+
+  it("exibe a mensagem quando a API está fora do ar", async () => {
+    listItems.mockRejectedValue(new Error("Não foi possível conectar à API"));
+    render(<ItemsPage />);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Não foi possível conectar à API");
+  });
+});
+
+describe("ItemsPage — cadastro", () => {
+  it("envia o produto para a API e exibe na lista", async () => {
+    const usuario = userEvent.setup();
+    const criado = {
+      ...TECLADO,
+      id: 2,
+      nome: "Monitor",
+      categoria: "Eletrônicos",
+      quantidade: 3,
+      preco: 900,
+    };
+    createItem.mockResolvedValue(criado);
+    render(<ItemsPage />);
+    await screen.findByText("Nenhum produto cadastrado ainda.");
+
+    await preencherFormulario(usuario);
+
+    expect(createItem).toHaveBeenCalledWith({
+      nome: "Monitor",
+      descricao: "",
+      categoria: "Eletrônicos",
+      quantidade: 3,
+      preco: 900,
+    });
+    expect(await screen.findByRole("heading", { name: "Monitor" })).toBeInTheDocument();
+  });
+
+  it("mostra o erro de nome repetido e preserva o que foi digitado", async () => {
+    const usuario = userEvent.setup();
+    createItem.mockRejectedValue(new Error("Já existe um item com esse nome"));
+    render(<ItemsPage />);
+    await screen.findByText("Nenhum produto cadastrado ainda.");
+
+    await preencherFormulario(usuario, "Teclado");
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Já existe um item com esse nome");
+    expect(screen.getByLabelText("Nome")).toHaveValue("Teclado");
+  });
+});
+
+describe("ItemsPage — remoção", () => {
+  it("chama a API e tira o produto da lista", async () => {
+    const usuario = userEvent.setup();
+    listItems.mockResolvedValue([TECLADO]);
+    deleteItem.mockResolvedValue(null);
+    render(<ItemsPage />);
+    await screen.findByRole("heading", { name: "Teclado" });
 
     await usuario.click(screen.getByRole("button", { name: "Remover Teclado" }));
 
-    expect(screen.getByText("Nenhum produto cadastrado ainda.")).toBeInTheDocument();
+    expect(deleteItem).toHaveBeenCalledWith(1);
+    await waitFor(() =>
+      expect(screen.getByText("Nenhum produto cadastrado ainda.")).toBeInTheDocument(),
+    );
+  });
+
+  it("exibe a mensagem quando a remoção falha", async () => {
+    const usuario = userEvent.setup();
+    listItems.mockResolvedValue([TECLADO]);
+    deleteItem.mockRejectedValue(new Error("Erro 500 ao falar com a API"));
+    render(<ItemsPage />);
+    await screen.findByRole("heading", { name: "Teclado" });
+
+    await usuario.click(screen.getByRole("button", { name: "Remover Teclado" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Erro 500");
   });
 });

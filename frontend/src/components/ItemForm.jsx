@@ -24,21 +24,25 @@ export default function ItemForm({ onAdicionar }) {
     setValores((anterior) => ({ ...anterior, [campo]: valor }));
   }
 
-  function aoEnviar(evento) {
+  async function aoEnviar(evento) {
     evento.preventDefault();
     const encontrados = validarItem(valores);
     setErros(encontrados);
     if (!ehValido(encontrados)) return;
 
-    onAdicionar({
-      nome: valores.nome.trim(),
-      descricao: valores.descricao.trim(),
-      categoria: valores.categoria,
-      quantidade: Number(valores.quantidade),
-      preco: Number(valores.preco),
-    });
-    setValores(VAZIO);
-    setErros({});
+    try {
+      await onAdicionar({
+        nome: valores.nome.trim(),
+        descricao: valores.descricao.trim(),
+        categoria: valores.categoria,
+        quantidade: Number(valores.quantidade),
+        preco: Number(valores.preco),
+      });
+      setValores(VAZIO);
+      setErros({});
+    } catch {
+      // A página já exibe a mensagem; o formulário mantém os valores digitados.
+    }
   }
 
   return (

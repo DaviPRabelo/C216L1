@@ -1,22 +1,52 @@
+import { useCallback, useEffect, useState } from "react";
 import ItemForm from "../components/ItemForm.jsx";
 import ItemList from "../components/ItemList.jsx";
-import { useState } from "react";
+import { createItem, deleteItem, listItems } from "../services/items.js";
 import { formatarMoeda } from "../validation.js";
 
 export default function ItemsPage() {
   const [itens, setItens] = useState([]);
-  const [proximoId, setProximoId] = useState(1);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState(null);
 
   const total = itens.reduce((soma, item) => soma + item.quantidade * item.preco, 0);
   const unidades = itens.reduce((soma, item) => soma + item.quantidade, 0);
 
-  function adicionar(dados) {
-    setItens((anteriores) => [...anteriores, { id: proximoId, ...dados }]);
-    setProximoId((anterior) => anterior + 1);
+  const carregar = useCallback(async () => {
+    setCarregando(true);
+    setErro(null);
+    try {
+      setItens(await listItems());
+    } catch (falha) {
+      setErro(falha.message);
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
+
+  async function adicionar(dados) {
+    setErro(null);
+    try {
+      const criado = await createItem(dados);
+      setItens((anteriores) => [...anteriores, criado]);
+    } catch (falha) {
+      setErro(falha.message);
+      throw falha;
+    }
   }
 
-  function remover(id) {
-    setItens((anteriores) => anteriores.filter((item) => item.id !== id));
+  async function remover(id) {
+    setErro(null);
+    try {
+      await deleteItem(id);
+      setItens((anteriores) => anteriores.filter((item) => item.id !== id));
+    } catch (falha) {
+      setErro(falha.message);
+    }
   }
 
   return (
@@ -27,6 +57,15 @@ export default function ItemsPage() {
         </h1>
         <ItemForm onAdicionar={adicionar} />
       </section>
+
+      {erro && (
+        <p
+          role="alert"
+          className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-800"
+        >
+          {erro}
+        </p>
+      )}
 
       <section aria-labelledby="titulo-catalogo" className="space-y-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-300 pb-2">
@@ -40,7 +79,12 @@ export default function ItemsPage() {
             </p>
           )}
         </div>
-        <ItemList itens={itens} onRemover={remover} />
+
+        {carregando ? (
+          <p className="p-8 text-center text-sm text-slate-500">Carregando produtos...</p>
+        ) : (
+          <ItemList itens={itens} onRemover={remover} />
+        )}
       </section>
     </main>
   );

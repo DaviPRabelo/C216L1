@@ -11,6 +11,10 @@ NPM = npm
         front-install front-dev front-build front-preview \
         front-lint front-format front-format-check front-test front-test-e2e \
         front-check back-check check-all
+		front-check back-check check-all fix
+		front-check back-check check-all fix \
+		ps db-upgrade db-current frontend-test frontend-check frontend-build e2e
+
 
 help:
 	@echo "Comandos disponíveis:"
@@ -52,6 +56,12 @@ help:
 	@echo "    make migrate       - Aplica as migrations (alembic upgrade head)"
 	@echo "    make migration m=\"msg\" - Gera uma migration nova"
 	@echo "    make db-shell      - Abre o psql no container do PostgreSQL"
+
+	@echo "    make e2e                - Sobe a stack e roda os testes E2E"
+	@echo "    make ps                 - Alias de docker-ps"
+	@echo "    make db-upgrade         - Alias de migrate"
+	@echo "    make db-current         - Mostra a revisão aplicada no banco"
+
 
 install:
 	cd $(BACKEND_DIR) && $(POETRY) install
@@ -147,3 +157,21 @@ back-check: lint test
 
 # Valida o projeto inteiro
 check-all: back-check front-check
+
+fix:
+	cd $(BACKEND_DIR) && $(POETRY) run ruff check --fix .
+	cd $(BACKEND_DIR) && $(POETRY) run ruff format .
+	cd $(FRONTEND_DIR) && $(NPM) run check -- --write
+
+ps: docker-ps
+frontend-test: front-test
+frontend-check: front-check
+frontend-build: front-build
+db-upgrade: migrate
+
+db-current:
+	cd $(BACKEND_DIR) && $(POETRY) run alembic current
+
+e2e:
+	docker compose up -d db backend
+	cd $(FRONTEND_DIR) && $(NPM) run test:e2e

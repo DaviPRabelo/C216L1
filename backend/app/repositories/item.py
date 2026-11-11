@@ -10,8 +10,16 @@ class RepositorioDeItens:
     def __init__(self, sessao: Session) -> None:
         self._sessao = sessao
 
-    def adicionar(self, nome: str, preco: float) -> ItemORM:
-        item = ItemORM(nome=nome, preco=preco)
+    def adicionar(
+        self, nome: str, descricao: str, categoria: str, quantidade: int, preco: float
+    ) -> ItemORM:
+        item = ItemORM(
+            nome=nome,
+            descricao=descricao,
+            categoria=categoria,
+            quantidade=quantidade,
+            preco=preco,
+        )
         self._sessao.add(item)
         self._sessao.commit()
         self._sessao.refresh(item)
@@ -20,14 +28,28 @@ class RepositorioDeItens:
     def buscar(self, item_id: int) -> ItemORM | None:
         return self._sessao.get(ItemORM, item_id)
 
+    def buscar_por_nome(self, nome: str) -> ItemORM | None:
+        return self._sessao.scalars(select(ItemORM).where(ItemORM.nome == nome)).first()
+
     def listar(self, nome_contem: str | None = None) -> list[ItemORM]:
         consulta = select(ItemORM).order_by(ItemORM.id)
         if nome_contem:
             consulta = consulta.where(ItemORM.nome.ilike(f"%{nome_contem}%"))
         return list(self._sessao.scalars(consulta))
 
-    def atualizar(self, item: ItemORM, nome: str, preco: float) -> ItemORM:
+    def atualizar(
+        self,
+        item: ItemORM,
+        nome: str,
+        descricao: str,
+        categoria: str,
+        quantidade: int,
+        preco: float,
+    ) -> ItemORM:
         item.nome = nome
+        item.descricao = descricao
+        item.categoria = categoria
+        item.quantidade = quantidade
         item.preco = preco
         self._sessao.commit()
         self._sessao.refresh(item)

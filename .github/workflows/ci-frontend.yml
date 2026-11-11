@@ -40,6 +40,25 @@ jobs:
     runs-on: ubuntu-latest
     needs: qualidade
 
+    env:
+      DATABASE_URL: postgresql+psycopg://admin:adminpassword@localhost:5432/c216_db
+      CORS_ORIGINS: http://localhost:5173,http://localhost:4173
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: adminpassword
+          POSTGRES_DB: c216_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Clonar o repositório
         uses: actions/checkout@v4
@@ -51,11 +70,39 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Instalar as dependências
+      - name: Instalar as dependências do frontend
         run: npm ci
 
       - name: Executar os testes unitários e de integração
         run: npm run test
+
+      - name: Instalar o Poetry
+        run: pipx install poetry
+
+      - name: Configurar o Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: poetry
+          cache-dependency-path: backend/poetry.lock
+
+      - name: Instalar as dependências do backend
+        working-directory: backend
+        run: poetry install --no-root
+
+      - name: Aplicar as migrations
+        working-directory: backend
+        run: poetry run alembic upgrade head
+
+      - name: Subir a API em segundo plano
+        working-directory: backend
+        run: |
+          poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8000/ > /dev/null && echo "API no ar" && exit 0
+            sleep 2
+          done
+          echo "A API não subiu a tempo" && exit 1
 
       - name: Gerar o bundle de produção
         run: npm run build

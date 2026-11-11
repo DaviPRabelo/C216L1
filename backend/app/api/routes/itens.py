@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_session
-from app.errors import DadosInvalidos, ItemNaoEncontrado
+from app.errors import DadosInvalidos, ItemNaoEncontrado, NomeJaExiste
 from app.repositories.item import RepositorioDeItens
 from app.schemas.item import Item, ItemAtualizacaoParcial, ItemEntrada
 from app.services import item as servico
@@ -34,9 +34,19 @@ def obter(item_id: int, repo: RepositorioDeItens = Depends(obter_repositorio)):
 @router.post("", response_model=Item, status_code=201)
 def criar(entrada: ItemEntrada, repo: RepositorioDeItens = Depends(obter_repositorio)):
     try:
-        return servico.criar_item(repo, entrada.nome, entrada.preco)
+        return servico.criar_item(
+            repo,
+            entrada.nome,
+            entrada.descricao,
+            entrada.categoria,
+            entrada.quantidade,
+            entrada.preco,
+        )
+
     except DadosInvalidos as erro:
         raise HTTPException(status_code=422, detail=str(erro)) from erro
+    except NomeJaExiste as erro:
+        raise HTTPException(status_code=409, detail=str(erro)) from erro
 
 
 @router.put("/{item_id}", response_model=Item)
@@ -46,11 +56,22 @@ def substituir(
     repo: RepositorioDeItens = Depends(obter_repositorio),
 ):
     try:
-        return servico.substituir_item(repo, item_id, entrada.nome, entrada.preco)
+        return servico.substituir_item(
+            repo,
+            item_id,
+            entrada.nome,
+            entrada.descricao,
+            entrada.categoria,
+            entrada.quantidade,
+            entrada.preco,
+        )
+
     except ItemNaoEncontrado as erro:
         raise HTTPException(status_code=404, detail=str(erro)) from erro
     except DadosInvalidos as erro:
         raise HTTPException(status_code=422, detail=str(erro)) from erro
+    except NomeJaExiste as erro:
+        raise HTTPException(status_code=409, detail=str(erro)) from erro
 
 
 @router.patch("/{item_id}", response_model=Item)
@@ -60,11 +81,22 @@ def atualizar(
     repo: RepositorioDeItens = Depends(obter_repositorio),
 ):
     try:
-        return servico.atualizar_item(repo, item_id, entrada.nome, entrada.preco)
+        return servico.atualizar_item(
+            repo,
+            item_id,
+            entrada.nome,
+            entrada.descricao,
+            entrada.categoria,
+            entrada.quantidade,
+            entrada.preco,
+        )
+
     except ItemNaoEncontrado as erro:
         raise HTTPException(status_code=404, detail=str(erro)) from erro
     except DadosInvalidos as erro:
         raise HTTPException(status_code=422, detail=str(erro)) from erro
+    except NomeJaExiste as erro:
+        raise HTTPException(status_code=409, detail=str(erro)) from erro
 
 
 @router.delete("/{item_id}", status_code=204)

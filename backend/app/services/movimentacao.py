@@ -36,7 +36,7 @@ def registrar_movimentacao(
         raise DadosInvalidos(f"A observação deve ter até {OBSERVACAO_MAXIMA} caracteres")
 
     if tipo is TipoMovimentacao.SAIDA and quantidade > produto.saldo:
-        raise SaldoInsuficiente(produto.saldo, quantidade, produto.unidade)
+        raise SaldoInsuficiente(produto.saldo, quantidade, produto.unidade.value)
 
     return repo_movimentacoes.registrar(produto, tipo, quantidade, responsavel, observacao)
 

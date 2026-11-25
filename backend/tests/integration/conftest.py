@@ -5,20 +5,23 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from app.api.routes.itens import obter_repositorio
+from app.api.dependencias import (
+    obter_repositorio_de_movimentacoes,
+    obter_repositorio_de_produtos,
+)
 from app.database.base import Base
 from app.main import app
-from app.models import ItemORM  # noqa: F401 — registra a tabela no metadata
-from app.repositories.item import RepositorioDeItens
+from app.models import MovimentacaoORM, ProdutoORM  # noqa: F401 — registra as tabelas
+from app.repositories.movimentacao import RepositorioDeMovimentacoes
+from app.repositories.produto import RepositorioDeProdutos
 
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
-    "postgresql+psycopg://admin:adminpassword@localhost:5432/c216_test",
+    "postgresql+psycopg://admin:adminpassword@localhost:5432/almoxarifado_test",
 )
 
 
 def _garantir_banco_de_teste(url: str) -> None:
-    """Cria o banco de teste se ele ainda não existir."""
     base, nome = url.rsplit("/", 1)
     admin = create_engine(f"{base}/postgres", isolation_level="AUTOCOMMIT")
     with admin.connect() as conexao:
@@ -52,14 +55,19 @@ def sessao(engine_de_teste):
 
 
 @pytest.fixture
-def client(sessao) -> TestClient:
-    """TestClient apontando para o banco de teste, isolado por teste."""
-    app.dependency_overrides[obter_repositorio] = lambda: RepositorioDeItens(sessao)
-    yield TestClient(app)
-    app.dependency_overrides.clear()
+def repo(sessao) -> RepositorioDeProdutos:
+    return RepositorioDeProdutos(sessao)
 
 
 @pytest.fixture
-def repo(sessao) -> RepositorioDeItens:
-    """Repositório real, para preparar dados nos testes de integração."""
-    return RepositorioDeItens(sessao)
+def repo_movimentacoes(sessao) -> RepositorioDeMovimentacoes:
+    return RepositorioDeMovimentacoes(sessao)
+
+
+@pytest.fixture
+def client(repo, repo_movimentacoes) -> TestClient:
+    """TestClient com os dois repositórios sobre a mesma sessão de teste."""
+    app.dependency_overrides[obter_repositorio_de_produtos] = lambda: repo
+    app.dependency_overrides[obter_repositorio_de_movimentacoes] = lambda: repo_movimentacoes
+    yield TestClient(app)
+    app.dependency_overrides.clear()

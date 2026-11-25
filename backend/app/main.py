@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.api.routes import auth, movimentacoes, produtos
-from app.api.routes import movimentacoes, produtos
 from app.api.tratamento_de_erros import registrar_tratadores
 from app.config import CORS_ORIGINS
 

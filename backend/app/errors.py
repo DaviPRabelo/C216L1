@@ -35,7 +35,8 @@ class ProdutoComMovimentacoes(ErroDeDominio):
             "Não é possível excluir um produto que já teve movimentações. "
             "O histórico precisa ser preservado."
         )
-        
+
+
 class CredenciaisInvalidas(ErroDeDominio):
     def __init__(self):
         super().__init__("E-mail ou senha incorretos")
@@ -44,4 +45,4 @@ class CredenciaisInvalidas(ErroDeDominio):
 class EmailJaExiste(ErroDeDominio):
     def __init__(self, email: str):
         self.email = email
-        super().__init__(f"Já existe uma conta com o e-mail {email}") 
+        super().__init__(f"Já existe uma conta com o e-mail {email}")

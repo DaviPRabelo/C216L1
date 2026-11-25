@@ -89,6 +89,12 @@ class RepositorioDeMovimentacoesFalso:
     def listar_do_produto(self, produto_id: int) -> list[MovimentacaoORM]:
         return [m for m in reversed(self._movimentacoes) if m.produto_id == produto_id]
 
+USUARIO_PADRAO = {
+    "nome": "Davi",
+    "email": "davi@almox.com",
+    "setor": "TI",
+    "senha": "senha123",
+}
 class RepositorioDeUsuariosFalso:
     def __init__(self) -> None:
         self._usuarios: dict[int, UsuarioORM] = {}
@@ -112,6 +118,7 @@ class RepositorioDeUsuariosFalso:
 @pytest.fixture
 def repo_usuarios() -> RepositorioDeUsuariosFalso:
     return RepositorioDeUsuariosFalso()
+
 
 @pytest.fixture
 def repo() -> RepositorioDeProdutosFalso:

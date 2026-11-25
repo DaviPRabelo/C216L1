@@ -17,6 +17,8 @@ class RepositorioDeMovimentacoes:
         quantidade: int,
         responsavel: str,
         observacao: str,
+        requerente: str = "",
+        destino: str = "",
     ) -> MovimentacaoORM:
         """Grava a movimentação e ajusta o saldo na mesma transação."""
         movimentacao = MovimentacaoORM(
@@ -25,6 +27,8 @@ class RepositorioDeMovimentacoes:
             quantidade=quantidade,
             responsavel=responsavel,
             observacao=observacao,
+            requerente=requerente,
+            destino=destino,
         )
         self._sessao.add(movimentacao)
 
@@ -44,24 +48,4 @@ class RepositorioDeMovimentacoes:
                 .where(MovimentacaoORM.produto_id == produto_id)
                 .order_by(MovimentacaoORM.id.desc())
             )
-        )
-    
-    def registrar(
-        self,
-        produto: ProdutoORM,
-        tipo: TipoMovimentacao,
-        quantidade: int,
-        responsavel: str,
-        observacao: str,
-        requerente: str = "",
-        destino: str = "",
-    ) -> MovimentacaoORM:
-        movimentacao = MovimentacaoORM(
-            produto_id=produto.id,
-            tipo=tipo,
-            quantidade=quantidade,
-            responsavel=responsavel,
-            observacao=observacao,
-            requerente=requerente,
-            destino=destino,
         )

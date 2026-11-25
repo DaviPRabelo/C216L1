@@ -18,7 +18,9 @@ def registrar(
     entrada: UsuarioCadastro,
     repo: RepositorioDeUsuarios = Depends(obter_repositorio),
 ):
-    return servico.registrar_usuario(repo, entrada.nome, entrada.email, entrada.senha, entrada.setor)
+    return servico.registrar_usuario(
+        repo, entrada.nome, entrada.email, entrada.senha, entrada.setor
+    )
 
 
 @router.post("/login", response_model=UsuarioPublico)

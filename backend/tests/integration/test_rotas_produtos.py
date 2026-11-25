@@ -83,6 +83,7 @@ def test_listar_apenas_abaixo_do_minimo(client):
 
     assert [p["nome"] for p in resposta.json()] == ["Luva"]
 
+
 def test_estoque_minimo_zero_nunca_entra_no_alerta(client):
     client.post("/produtos", json={**PRODUTO, "estoque_minimo": 0})
 
@@ -90,7 +91,7 @@ def test_estoque_minimo_zero_nunca_entra_no_alerta(client):
 
     assert resposta.json() == []
 
-    
+
 def test_listar_categorias(client):
     client.post("/produtos", json=PRODUTO)
     client.post(

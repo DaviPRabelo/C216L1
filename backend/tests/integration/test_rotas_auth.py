@@ -42,9 +42,7 @@ def test_registrar_com_email_invalido_retorna_422(client):
 def test_login(client):
     client.post("/auth/registrar", json=USUARIO)
 
-    resposta = client.post(
-        "/auth/login", json={"email": "davi@almox.com", "senha": "senha123"}
-    )
+    resposta = client.post("/auth/login", json={"email": "davi@almox.com", "senha": "senha123"})
 
     assert resposta.status_code == 200
     assert resposta.json()["nome"] == "Davi"
@@ -53,9 +51,7 @@ def test_login(client):
 def test_login_aceita_email_em_maiusculo(client):
     client.post("/auth/registrar", json=USUARIO)
 
-    resposta = client.post(
-        "/auth/login", json={"email": "DAVI@ALMOX.COM", "senha": "senha123"}
-    )
+    resposta = client.post("/auth/login", json={"email": "DAVI@ALMOX.COM", "senha": "senha123"})
 
     assert resposta.status_code == 200
 

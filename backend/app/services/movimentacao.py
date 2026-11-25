@@ -28,7 +28,6 @@ def registrar_movimentacao(
     destino = (destino or "").strip()
     observacao = (observacao or "").strip()
 
-
     if tipo is TipoMovimentacao.SAIDA:
         if not requerente:
             raise DadosInvalidos("Toda saída precisa informar o requerente")
@@ -43,7 +42,7 @@ def registrar_movimentacao(
         raise DadosInvalidos("O requerente deve ter até 100 caracteres")
     if len(destino) > 100:
         raise DadosInvalidos("O destino deve ter até 100 caracteres")
-    
+
     if quantidade <= 0:
         raise DadosInvalidos("A quantidade deve ser maior que zero")
     if quantidade > QUANTIDADE_MAXIMA:
@@ -61,6 +60,7 @@ def registrar_movimentacao(
     return repo_movimentacoes.registrar(
         produto, tipo, quantidade, responsavel, observacao, requerente, destino
     )
+
 
 def listar_movimentacoes(
     repo_produtos: RepositorioDeProdutos,

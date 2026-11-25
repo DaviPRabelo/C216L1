@@ -21,9 +21,7 @@ class RepositorioDeProdutos:
         return self._sessao.get(ProdutoORM, produto_id)
 
     def buscar_por_codigo(self, codigo: str) -> ProdutoORM | None:
-        return self._sessao.scalars(
-            select(ProdutoORM).where(ProdutoORM.codigo == codigo)
-        ).first()
+        return self._sessao.scalars(select(ProdutoORM).where(ProdutoORM.codigo == codigo)).first()
 
     def listar(
         self, categoria: str | None = None, apenas_abaixo_do_minimo: bool = False
@@ -37,7 +35,9 @@ class RepositorioDeProdutos:
 
     def categorias(self) -> list[str]:
         return list(
-            self._sessao.scalars(select(ProdutoORM.categoria).distinct().order_by(ProdutoORM.categoria))
+            self._sessao.scalars(
+                select(ProdutoORM.categoria).distinct().order_by(ProdutoORM.categoria)
+            )
         )
 
     def atualizar(self, produto: ProdutoORM, **campos) -> ProdutoORM:

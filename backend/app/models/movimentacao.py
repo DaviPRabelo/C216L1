@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -17,7 +17,15 @@ class MovimentacaoORM(Base):
     produto_id: Mapped[int] = mapped_column(
         ForeignKey("produtos.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    tipo: Mapped[TipoMovimentacao] = mapped_column(String(10), nullable=False)
+    tipo: Mapped[TipoMovimentacao] = mapped_column(
+        SAEnum(
+            TipoMovimentacao,
+            native_enum=False,
+            length=10,
+            values_callable=lambda enum: [membro.value for membro in enum],
+        ),
+        nullable=False,
+    )
     quantidade: Mapped[int] = mapped_column(Integer, nullable=False)
     responsavel: Mapped[str] = mapped_column(String(100), nullable=False)
     observacao: Mapped[str] = mapped_column(String(200), nullable=False, default="")

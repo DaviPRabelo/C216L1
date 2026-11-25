@@ -1,80 +1,105 @@
+from datetime import datetime, timezone
+
 import pytest
 
-from app.models.item import ItemORM
+from app.models.enums import TipoMovimentacao, UnidadeMedida
+from app.models.movimentacao import MovimentacaoORM
+from app.models.produto import ProdutoORM
 
-ITEM_PADRAO = {
-    "nome": "Teclado",
-    "descricao": "Mecânico",
-    "categoria": "Periféricos",
-    "quantidade": 2,
-    "preco": 150.0,
+PRODUTO_PADRAO = {
+    "codigo": "PAR-001",
+    "nome": "Parafuso sextavado",
+    "categoria": "Fixadores",
+    "unidade": UnidadeMedida.UNIDADE,
+    "descricao": "M8 x 40mm",
+    "estoque_minimo": 50,
 }
 
 
-class RepositorioFalso:
-    """Dublê em memória do repositório, para os testes unitários."""
+class RepositorioDeProdutosFalso:
+    """Dublê em memória, para os testes unitários rodarem sem banco."""
 
     def __init__(self) -> None:
-        self._itens: dict[int, ItemORM] = {}
+        self._produtos: dict[int, ProdutoORM] = {}
         self._proximo_id = 1
 
-    def adicionar(
-        self, nome: str, descricao: str, categoria: str, quantidade: int, preco: float
-    ) -> ItemORM:
-        item = ItemORM(
-            id=self._proximo_id,
-            nome=nome,
-            descricao=descricao,
-            categoria=categoria,
-            quantidade=quantidade,
-            preco=preco,
-        )
-        self._itens[item.id] = item
+    def adicionar(self, **campos) -> ProdutoORM:
+        produto = ProdutoORM(id=self._proximo_id, **campos)
+        produto.movimentacoes = []
+        self._produtos[produto.id] = produto
         self._proximo_id += 1
-        return item
+        return produto
 
-    def buscar(self, item_id: int) -> ItemORM | None:
-        return self._itens.get(item_id)
+    def buscar(self, produto_id: int) -> ProdutoORM | None:
+        return self._produtos.get(produto_id)
 
-    def buscar_por_nome(self, nome: str) -> ItemORM | None:
-        return next((item for item in self._itens.values() if item.nome == nome), None)
+    def buscar_por_codigo(self, codigo: str) -> ProdutoORM | None:
+        return next((p for p in self._produtos.values() if p.codigo == codigo), None)
 
-    def listar(self, nome_contem: str | None = None) -> list[ItemORM]:
-        itens = list(self._itens.values())
-        if nome_contem:
-            termo = nome_contem.lower()
-            itens = [item for item in itens if termo in item.nome.lower()]
-        return itens
+    def listar(self, categoria=None, apenas_abaixo_do_minimo=False) -> list[ProdutoORM]:
+        produtos = sorted(self._produtos.values(), key=lambda p: p.nome)
+        if categoria:
+            produtos = [p for p in produtos if p.categoria == categoria]
+        if apenas_abaixo_do_minimo:
+            produtos = [p for p in produtos if p.saldo < p.estoque_minimo]
+        return produtos
 
-    def atualizar(
-        self,
-        item: ItemORM,
-        nome: str,
-        descricao: str,
-        categoria: str,
-        quantidade: int,
-        preco: float,
-    ) -> ItemORM:
-        item.nome = nome
-        item.descricao = descricao
-        item.categoria = categoria
-        item.quantidade = quantidade
-        item.preco = preco
-        return item
+    def categorias(self) -> list[str]:
+        return sorted({p.categoria for p in self._produtos.values()})
 
-    def remover(self, item_id: int) -> bool:
-        return self._itens.pop(item_id, None) is not None
+    def atualizar(self, produto: ProdutoORM, **campos) -> ProdutoORM:
+        for campo, valor in campos.items():
+            setattr(produto, campo, valor)
+        return produto
+
+    def remover(self, produto: ProdutoORM) -> None:
+        del self._produtos[produto.id]
+
+    def tem_movimentacoes(self, produto: ProdutoORM) -> bool:
+        return len(produto.movimentacoes) > 0
+
+
+class RepositorioDeMovimentacoesFalso:
+    def __init__(self) -> None:
+        self._movimentacoes: list[MovimentacaoORM] = []
+        self._proximo_id = 1
+
+    def registrar(self, produto, tipo, quantidade, responsavel, observacao) -> MovimentacaoORM:
+        movimentacao = MovimentacaoORM(
+            id=self._proximo_id,
+            produto_id=produto.id,
+            tipo=tipo,
+            quantidade=quantidade,
+            responsavel=responsavel,
+            observacao=observacao,
+            criada_em=datetime.now(timezone.utc),
+        )
+        self._movimentacoes.append(movimentacao)
+        self._proximo_id += 1
+
+        if tipo is TipoMovimentacao.ENTRADA:
+            produto.saldo += quantidade
+        else:
+            produto.saldo -= quantidade
+
+        produto.movimentacoes.append(movimentacao)
+        return movimentacao
+
+    def listar_do_produto(self, produto_id: int) -> list[MovimentacaoORM]:
+        return [m for m in reversed(self._movimentacoes) if m.produto_id == produto_id]
 
 
 @pytest.fixture
-def repo() -> RepositorioFalso:
-    """Repositório falso vazio, recriado a cada teste."""
-    return RepositorioFalso()
+def repo() -> RepositorioDeProdutosFalso:
+    return RepositorioDeProdutosFalso()
 
 
 @pytest.fixture
-def repo_com_itens(repo: RepositorioFalso) -> RepositorioFalso:
-    """Repositório falso já populado, para os testes de leitura."""
-    repo.adicionar("Teclado", "Mecânico", "Periféricos", 2, 150.0)
-    repo.adicionar("Monitor", "27 polegadas", "Eletrônicos", 1, 900.0)
-    return repo
+def repo_movimentacoes() -> RepositorioDeMovimentacoesFalso:
+    return RepositorioDeMovimentacoesFalso()
+
+
+@pytest.fixture
+def produto(repo):
+    """Produto já cadastrado, saldo zero."""
+    return repo.adicionar(**PRODUTO_PADRAO, saldo=0)

@@ -1,8 +1,8 @@
 """cria produtos e movimentacoes
 
-Revision ID: aabea8ce41b9
+Revision ID: 3f2990b47442
 Revises: 
-Create Date: 2026-11-25 16:09:50.845522
+Create Date: 2026-11-25 16:30:20.289521
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'aabea8ce41b9'
+revision: str = '3f2990b47442'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -27,7 +27,7 @@ def upgrade() -> None:
     sa.Column('nome', sa.String(length=100), nullable=False),
     sa.Column('descricao', sa.String(length=200), nullable=False),
     sa.Column('categoria', sa.String(length=50), nullable=False),
-    sa.Column('unidade', sa.String(length=3), nullable=False),
+    sa.Column('unidade', sa.Enum('UN', 'CX', 'KG', 'L', name='unidademedida', native_enum=False, length=3), nullable=False),
     sa.Column('estoque_minimo', sa.Integer(), nullable=False),
     sa.Column('saldo', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
@@ -37,7 +37,7 @@ def upgrade() -> None:
     op.create_table('movimentacoes',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('produto_id', sa.Integer(), nullable=False),
-    sa.Column('tipo', sa.String(length=10), nullable=False),
+    sa.Column('tipo', sa.Enum('ENTRADA', 'SAIDA', name='tipomovimentacao', native_enum=False, length=10), nullable=False),
     sa.Column('quantidade', sa.Integer(), nullable=False),
     sa.Column('responsavel', sa.String(length=100), nullable=False),
     sa.Column('observacao', sa.String(length=200), nullable=False),

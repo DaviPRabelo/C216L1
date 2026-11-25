@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Integer, String
+from sqlalchemy import Enum as SAEnum, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -20,7 +20,15 @@ class ProdutoORM(Base):
     nome: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     descricao: Mapped[str] = mapped_column(String(200), nullable=False, default="")
     categoria: Mapped[str] = mapped_column(String(50), nullable=False)
-    unidade: Mapped[UnidadeMedida] = mapped_column(String(3), nullable=False)
+    unidade: Mapped[UnidadeMedida] = mapped_column(
+        SAEnum(
+            UnidadeMedida,
+            native_enum=False,
+            length=3,
+            values_callable=lambda enum: [membro.value for membro in enum],
+        ),
+        nullable=False,
+    )
     estoque_minimo: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Mantido pelo serviço de movimentação, nunca editado diretamente.

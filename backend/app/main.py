@@ -1,10 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import itens
+from app.api.routes import movimentacoes, produtos
+from app.api.tratamento_de_erros import registrar_tratadores
 from app.config import CORS_ORIGINS
 
-app = FastAPI(title="API C216", version="7.0.0")
+app = FastAPI(
+    title="Almoxarifado C216",
+    description="Controle de estoque com produtos e movimentações de entrada e saída.",
+    version="1.0.0",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,9 +19,12 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 
-app.include_router(itens.router)
+registrar_tratadores(app)
+
+app.include_router(produtos.router)
+app.include_router(movimentacoes.router)
 
 
 @app.get("/", tags=["saude"])
-def read_root():
-    return {"message": "API Prática 1 C216"}
+def saude():
+    return {"status": "ok", "servico": "almoxarifado"}

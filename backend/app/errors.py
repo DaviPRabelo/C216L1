@@ -2,17 +2,36 @@ class ErroDeDominio(Exception):
     """Erro base da aplicação."""
 
 
-class ItemNaoEncontrado(ErroDeDominio):
-    def __init__(self, item_id: int):
-        self.item_id = item_id
-        super().__init__(f"Item {item_id} não encontrado")
-
-
 class DadosInvalidos(ErroDeDominio):
     pass
 
 
-class NomeJaExiste(ErroDeDominio):
-    def __init__(self, nome: str):
-        self.nome = nome
-        super().__init__("Já existe um item com esse nome")
+class ProdutoNaoEncontrado(ErroDeDominio):
+    def __init__(self, produto_id: int):
+        self.produto_id = produto_id
+        super().__init__(f"Produto {produto_id} não encontrado")
+
+
+class CodigoJaExiste(ErroDeDominio):
+    def __init__(self, codigo: str):
+        self.codigo = codigo
+        super().__init__(f"Já existe um produto com o código {codigo}")
+
+
+class SaldoInsuficiente(ErroDeDominio):
+    def __init__(self, disponivel: int, solicitado: int, unidade: str):
+        self.disponivel = disponivel
+        self.solicitado = solicitado
+        super().__init__(
+            f"Saldo insuficiente: disponível {disponivel} {unidade}, "
+            f"solicitado {solicitado} {unidade}"
+        )
+
+
+class ProdutoComMovimentacoes(ErroDeDominio):
+    def __init__(self, produto_id: int):
+        self.produto_id = produto_id
+        super().__init__(
+            "Não é possível excluir um produto que já teve movimentações. "
+            "O histórico precisa ser preservado."
+        )

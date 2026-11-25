@@ -1,3 +1,4 @@
-from app.repositories.item import RepositorioDeItens
+from app.repositories.movimentacao import RepositorioDeMovimentacoes
+from app.repositories.produto import RepositorioDeProdutos
 
-__all__ = ["RepositorioDeItens"]
+__all__ = ["RepositorioDeMovimentacoes", "RepositorioDeProdutos"]

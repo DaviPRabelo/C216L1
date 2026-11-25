@@ -5,7 +5,7 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 from app.database.base import Base
-from app.models import ItemORM  # noqa: F401 — registra o modelo no metadata
+from app.models import MovimentacaoORM, ProdutoORM  # noqa: F401 — registra as tabelas no metadata
 
 config = context.config
 

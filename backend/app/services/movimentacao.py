@@ -17,13 +17,33 @@ def registrar_movimentacao(
     tipo: TipoMovimentacao,
     quantidade: int,
     responsavel: str,
+    requerente: str = "",
+    destino: str = "",
     observacao: str = "",
 ) -> MovimentacaoORM:
     produto = servico_produto.obter_produto(repo_produtos, produto_id)
 
     responsavel = (responsavel or "").strip()
+    requerente = (requerente or "").strip()
+    destino = (destino or "").strip()
     observacao = (observacao or "").strip()
 
+
+    if tipo is TipoMovimentacao.SAIDA:
+        if not requerente:
+            raise DadosInvalidos("Toda saída precisa informar o requerente")
+        if not destino:
+            raise DadosInvalidos("Toda saída precisa informar o destino")
+    else:
+        # Entrada não tem requerente nem destino: o material está chegando.
+        requerente = ""
+        destino = ""
+
+    if len(requerente) > 100:
+        raise DadosInvalidos("O requerente deve ter até 100 caracteres")
+    if len(destino) > 100:
+        raise DadosInvalidos("O destino deve ter até 100 caracteres")
+    
     if quantidade <= 0:
         raise DadosInvalidos("A quantidade deve ser maior que zero")
     if quantidade > QUANTIDADE_MAXIMA:
@@ -38,8 +58,9 @@ def registrar_movimentacao(
     if tipo is TipoMovimentacao.SAIDA and quantidade > produto.saldo:
         raise SaldoInsuficiente(produto.saldo, quantidade, produto.unidade.value)
 
-    return repo_movimentacoes.registrar(produto, tipo, quantidade, responsavel, observacao)
-
+    return repo_movimentacoes.registrar(
+        produto, tipo, quantidade, responsavel, observacao, requerente, destino
+    )
 
 def listar_movimentacoes(
     repo_produtos: RepositorioDeProdutos,

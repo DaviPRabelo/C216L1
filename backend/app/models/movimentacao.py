@@ -29,6 +29,8 @@ class MovimentacaoORM(Base):
     )
     quantidade: Mapped[int] = mapped_column(Integer, nullable=False)
     responsavel: Mapped[str] = mapped_column(String(100), nullable=False)
+    requerente: Mapped[str] = mapped_column(String(100), nullable=False, default="")
+    destino: Mapped[str] = mapped_column(String(100), nullable=False, default="")
     observacao: Mapped[str] = mapped_column(String(200), nullable=False, default="")
     criada_em: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

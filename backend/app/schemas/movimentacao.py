@@ -10,6 +10,8 @@ class MovimentacaoEntrada(BaseModel):
     quantidade: int
     responsavel: str
     observacao: str = ""
+    requerente: str = ""
+    destino: str = ""
 
 
 class Movimentacao(MovimentacaoEntrada):

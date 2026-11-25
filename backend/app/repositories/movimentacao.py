@@ -45,3 +45,23 @@ class RepositorioDeMovimentacoes:
                 .order_by(MovimentacaoORM.id.desc())
             )
         )
+    
+    def registrar(
+        self,
+        produto: ProdutoORM,
+        tipo: TipoMovimentacao,
+        quantidade: int,
+        responsavel: str,
+        observacao: str,
+        requerente: str = "",
+        destino: str = "",
+    ) -> MovimentacaoORM:
+        movimentacao = MovimentacaoORM(
+            produto_id=produto.id,
+            tipo=tipo,
+            quantidade=quantidade,
+            responsavel=responsavel,
+            observacao=observacao,
+            requerente=requerente,
+            destino=destino,
+        )

@@ -5,6 +5,7 @@ import pytest
 from app.models.enums import TipoMovimentacao, UnidadeMedida
 from app.models.movimentacao import MovimentacaoORM
 from app.models.produto import ProdutoORM
+from app.models.usuario import UsuarioORM
 
 PRODUTO_PADRAO = {
     "codigo": "PAR-001",
@@ -88,6 +89,29 @@ class RepositorioDeMovimentacoesFalso:
     def listar_do_produto(self, produto_id: int) -> list[MovimentacaoORM]:
         return [m for m in reversed(self._movimentacoes) if m.produto_id == produto_id]
 
+class RepositorioDeUsuariosFalso:
+    def __init__(self) -> None:
+        self._usuarios: dict[int, UsuarioORM] = {}
+        self._proximo_id = 1
+
+    def adicionar(self, nome: str, email: str, setor: str, senha_hash: str) -> UsuarioORM:
+        usuario = UsuarioORM(
+            id=self._proximo_id, nome=nome, email=email, setor=setor, senha_hash=senha_hash
+        )
+        self._usuarios[usuario.id] = usuario
+        self._proximo_id += 1
+        return usuario
+
+    def buscar(self, usuario_id: int) -> UsuarioORM | None:
+        return self._usuarios.get(usuario_id)
+
+    def buscar_por_email(self, email: str) -> UsuarioORM | None:
+        return next((u for u in self._usuarios.values() if u.email == email), None)
+
+
+@pytest.fixture
+def repo_usuarios() -> RepositorioDeUsuariosFalso:
+    return RepositorioDeUsuariosFalso()
 
 @pytest.fixture
 def repo() -> RepositorioDeProdutosFalso:

@@ -3,7 +3,9 @@ from fastapi.responses import JSONResponse
 
 from app.errors import (
     CodigoJaExiste,
+    CredenciaisInvalidas,
     DadosInvalidos,
+    EmailJaExiste,
     ErroDeDominio,
     ProdutoComMovimentacoes,
     ProdutoNaoEncontrado,
@@ -15,6 +17,8 @@ STATUS_POR_ERRO: dict[type[ErroDeDominio], int] = {
     CodigoJaExiste: 409,
     ProdutoComMovimentacoes: 409,
     SaldoInsuficiente: 409,
+    EmailJaExiste: 409,
+    CredenciaisInvalidas: 401,
     DadosInvalidos: 422,
 }
 

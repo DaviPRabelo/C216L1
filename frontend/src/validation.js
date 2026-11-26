@@ -1,70 +1,79 @@
-export const NOME_MAXIMO = 60;
-export const DESCRICAO_MAXIMA = 200;
-export const PRECO_MAXIMO = 1_000_000;
-export const QUANTIDADE_MAXIMA = 9999;
+export const UNIDADES = [
+  { valor: "UN", rotulo: "Unidade" },
+  { valor: "CX", rotulo: "Caixa" },
+  { valor: "KG", rotulo: "Quilo" },
+  { valor: "L", rotulo: "Litro" },
+];
 
-export const CATEGORIAS = ["Eletrônicos", "Periféricos", "Móveis", "Papelaria", "Outros"];
+export const TIPOS = [
+  { valor: "ENTRADA", rotulo: "Entrada" },
+  { valor: "SAIDA", rotulo: "Saída" },
+];
 
-export function validarNome(nome) {
-  const valor = (nome ?? "").trim();
-  if (!valor) return "O nome é obrigatório";
-  if (valor.length > NOME_MAXIMO) return `O nome deve ter até ${NOME_MAXIMO} caracteres`;
-  return null;
+function texto(valor) {
+  return (valor ?? "").trim();
 }
 
-export function validarDescricao(descricao) {
-  const valor = (descricao ?? "").trim();
-  if (valor.length > DESCRICAO_MAXIMA) {
-    return `A descrição deve ter até ${DESCRICAO_MAXIMA} caracteres`;
-  }
-  return null;
-}
-
-export function validarCategoria(categoria) {
-  if (!categoria) return "Escolha uma categoria";
-  if (!CATEGORIAS.includes(categoria)) return "Categoria inválida";
-  return null;
-}
-
-export function validarQuantidade(quantidade) {
-  if (quantidade === "" || quantidade === null || quantidade === undefined) {
-    return "A quantidade é obrigatória";
-  }
-  const valor = Number(quantidade);
-  if (!Number.isInteger(valor)) return "A quantidade deve ser um número inteiro";
-  if (valor < 1) return "A quantidade deve ser pelo menos 1";
-  if (valor > QUANTIDADE_MAXIMA) return `A quantidade não pode passar de ${QUANTIDADE_MAXIMA}`;
-  return null;
-}
-
-export function validarPreco(preco) {
-  if (preco === "" || preco === null || preco === undefined) return "O preço é obrigatório";
-  const valor = Number(preco);
-  if (Number.isNaN(valor)) return "O preço deve ser um número";
-  if (valor < 0) return "O preço não pode ser negativo";
-  if (valor > PRECO_MAXIMO) return `O preço não pode passar de ${PRECO_MAXIMO}`;
-  return null;
-}
-
-export function validarItem({ nome, descricao, categoria, quantidade, preco }) {
+export function validarProduto({ codigo, nome, descricao, categoria, unidade, estoque_minimo }) {
   const erros = {};
-  const validacoes = {
-    nome: validarNome(nome),
-    descricao: validarDescricao(descricao),
-    categoria: validarCategoria(categoria),
-    quantidade: validarQuantidade(quantidade),
-    preco: validarPreco(preco),
-  };
-  for (const [campo, erro] of Object.entries(validacoes)) {
-    if (erro) erros[campo] = erro;
+
+  if (!texto(codigo)) erros.codigo = "O código é obrigatório";
+  else if (texto(codigo).length > 20) erros.codigo = "O código deve ter até 20 caracteres";
+
+  if (!texto(nome)) erros.nome = "O nome é obrigatório";
+  else if (texto(nome).length > 100) erros.nome = "O nome deve ter até 100 caracteres";
+
+  if (texto(descricao).length > 200) erros.descricao = "A descrição deve ter até 200 caracteres";
+
+  if (!texto(categoria)) erros.categoria = "A categoria é obrigatória";
+  else if (texto(categoria).length > 50) erros.categoria = "A categoria deve ter até 50 caracteres";
+
+  if (!UNIDADES.some((u) => u.valor === unidade)) erros.unidade = "Escolha uma unidade";
+
+  const minimo = Number(estoque_minimo);
+  if (estoque_minimo === "" || Number.isNaN(minimo) || !Number.isInteger(minimo)) {
+    erros.estoque_minimo = "Informe um número inteiro";
+  } else if (minimo < 0) {
+    erros.estoque_minimo = "O estoque mínimo não pode ser negativo";
   }
+
+  return erros;
+}
+
+export function validarMovimentacao({ tipo, quantidade, responsavel, requerente, destino }) {
+  const erros = {};
+
+  if (!TIPOS.some((t) => t.valor === tipo)) erros.tipo = "Escolha o tipo";
+
+  const total = Number(quantidade);
+  if (quantidade === "" || Number.isNaN(total) || !Number.isInteger(total)) {
+    erros.quantidade = "Informe um número inteiro";
+  } else if (total <= 0) {
+    erros.quantidade = "A quantidade deve ser maior que zero";
+  }
+
+  if (!texto(responsavel)) erros.responsavel = "O responsável é obrigatório";
+
+  if (tipo === "SAIDA") {
+    if (!texto(requerente)) erros.requerente = "Toda saída precisa do requerente";
+    if (!texto(destino)) erros.destino = "Toda saída precisa do destino";
+  }
+
+  return erros;
+}
+
+export function validarLogin({ email, senha }) {
+  const erros = {};
+
+  const endereco = texto(email);
+  if (!endereco) erros.email = "O e-mail é obrigatório";
+  else if (!endereco.includes("@")) erros.email = "Informe um e-mail válido";
+
+  if (!senha) erros.senha = "A senha é obrigatória";
+
   return erros;
 }
 
 export function ehValido(erros) {
   return Object.keys(erros).length === 0;
-}
-
-export function formatarMoeda(valor) {
-  return `R$ ${Number(valor).toFixed(2).replace(".", ",")}`;
 }

@@ -2,12 +2,14 @@ from datetime import datetime, timezone
 
 import pytest
 
+from app.models.almoxarifado import AlmoxarifadoORM
 from app.models.enums import TipoMovimentacao, UnidadeMedida
 from app.models.movimentacao import MovimentacaoORM
 from app.models.produto import ProdutoORM
 from app.models.usuario import UsuarioORM
 
 PRODUTO_PADRAO = {
+    "almoxarifado_id": 1,
     "codigo": "PAR-001",
     "nome": "Parafuso sextavado",
     "categoria": "Fixadores",
@@ -37,16 +39,23 @@ class RepositorioDeProdutosFalso:
     def buscar_por_codigo(self, codigo: str) -> ProdutoORM | None:
         return next((p for p in self._produtos.values() if p.codigo == codigo), None)
 
-    def listar(self, categoria=None, apenas_abaixo_do_minimo=False) -> list[ProdutoORM]:
+    def listar(
+        self, almoxarifado_id=None, categoria=None, apenas_abaixo_do_minimo=False
+    ) -> list[ProdutoORM]:
         produtos = sorted(self._produtos.values(), key=lambda p: p.nome)
+        if almoxarifado_id is not None:
+            produtos = [p for p in produtos if p.almoxarifado_id == almoxarifado_id]
         if categoria:
             produtos = [p for p in produtos if p.categoria == categoria]
         if apenas_abaixo_do_minimo:
             produtos = [p for p in produtos if p.saldo < p.estoque_minimo]
         return produtos
 
-    def categorias(self) -> list[str]:
-        return sorted({p.categoria for p in self._produtos.values()})
+    def categorias(self, almoxarifado_id=None) -> list[str]:
+        produtos = self._produtos.values()
+        if almoxarifado_id is not None:
+            produtos = [p for p in produtos if p.almoxarifado_id == almoxarifado_id]
+        return sorted({p.categoria for p in produtos})
 
     def atualizar(self, produto: ProdutoORM, **campos) -> ProdutoORM:
         for campo, valor in campos.items():
@@ -65,7 +74,9 @@ class RepositorioDeMovimentacoesFalso:
         self._movimentacoes: list[MovimentacaoORM] = []
         self._proximo_id = 1
 
-    def registrar(self, produto, tipo, quantidade, responsavel, observacao) -> MovimentacaoORM:
+    def registrar(
+        self, produto, tipo, quantidade, responsavel, observacao, requerente="", destino=""
+    ) -> MovimentacaoORM:
         movimentacao = MovimentacaoORM(
             id=self._proximo_id,
             produto_id=produto.id,
@@ -73,6 +84,8 @@ class RepositorioDeMovimentacoesFalso:
             quantidade=quantidade,
             responsavel=responsavel,
             observacao=observacao,
+            requerente=requerente,
+            destino=destino,
             criada_em=datetime.now(timezone.utc),
         )
         self._movimentacoes.append(movimentacao)
@@ -89,12 +102,15 @@ class RepositorioDeMovimentacoesFalso:
     def listar_do_produto(self, produto_id: int) -> list[MovimentacaoORM]:
         return [m for m in reversed(self._movimentacoes) if m.produto_id == produto_id]
 
+
 USUARIO_PADRAO = {
     "nome": "Davi",
     "email": "davi@almox.com",
     "setor": "TI",
     "senha": "senha123",
 }
+
+
 class RepositorioDeUsuariosFalso:
     def __init__(self) -> None:
         self._usuarios: dict[int, UsuarioORM] = {}
@@ -134,3 +150,53 @@ def repo_movimentacoes() -> RepositorioDeMovimentacoesFalso:
 def produto(repo):
     """Produto já cadastrado, saldo zero."""
     return repo.adicionar(**PRODUTO_PADRAO, saldo=0)
+
+
+ALMOXARIFADO_PADRAO = {
+    "nome": "Central",
+    "local": "Galpao A",
+    "responsavel": "Davi",
+}
+
+
+class RepositorioDeAlmoxarifadosFalso:
+    def __init__(self) -> None:
+        self._almoxarifados: dict[int, AlmoxarifadoORM] = {}
+        self._proximo_id = 1
+        self._produtos_por_almoxarifado: dict[int, int] = {}
+
+    def adicionar(self, **campos) -> AlmoxarifadoORM:
+        almoxarifado = AlmoxarifadoORM(id=self._proximo_id, **campos)
+        self._almoxarifados[almoxarifado.id] = almoxarifado
+        self._proximo_id += 1
+        return almoxarifado
+
+    def buscar(self, almoxarifado_id: int):
+        return self._almoxarifados.get(almoxarifado_id)
+
+    def buscar_por_nome(self, nome: str):
+        alvo = nome.lower()
+        return next((a for a in self._almoxarifados.values() if a.nome.lower() == alvo), None)
+
+    def listar(self, apenas_ativos: bool = False):
+        itens = sorted(self._almoxarifados.values(), key=lambda a: a.nome)
+        return [a for a in itens if a.ativo] if apenas_ativos else itens
+
+    def atualizar(self, almoxarifado, **campos):
+        for campo, valor in campos.items():
+            setattr(almoxarifado, campo, valor)
+        return almoxarifado
+
+    def remover(self, almoxarifado) -> None:
+        del self._almoxarifados[almoxarifado.id]
+
+    def contar_produtos(self, almoxarifado_id: int) -> int:
+        return self._produtos_por_almoxarifado.get(almoxarifado_id, 0)
+
+    def resumo(self, almoxarifado_id: int):
+        return (self.contar_produtos(almoxarifado_id), 0, 0)
+
+
+@pytest.fixture
+def repo_almoxarifados() -> RepositorioDeAlmoxarifadosFalso:
+    return RepositorioDeAlmoxarifadosFalso()

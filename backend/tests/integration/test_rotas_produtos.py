@@ -1,4 +1,5 @@
 PRODUTO = {
+    "almoxarifado_id": 1,
     "codigo": "PAR-001",
     "nome": "Parafuso sextavado",
     "descricao": "M8 x 40mm",

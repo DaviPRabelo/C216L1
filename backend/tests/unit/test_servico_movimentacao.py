@@ -8,9 +8,32 @@ ENTRADA = TipoMovimentacao.ENTRADA
 SAIDA = TipoMovimentacao.SAIDA
 
 
-def registrar(repo, repo_mov, produto_id, tipo, quantidade, responsavel="Davi", observacao=""):
+def registrar(
+    repo,
+    repo_mov,
+    produto_id,
+    tipo,
+    quantidade,
+    responsavel="Davi",
+    observacao="",
+    requerente=None,
+    destino=None,
+):
+    """Preenche requerente e destino por padrão nas saídas, que os exigem."""
+    if tipo is SAIDA:
+        requerente = "Maria" if requerente is None else requerente
+        destino = "Manutenção" if destino is None else destino
+
     return servico.registrar_movimentacao(
-        repo, repo_mov, produto_id, tipo, quantidade, responsavel, observacao
+        repo,
+        repo_mov,
+        produto_id,
+        tipo=tipo,
+        quantidade=quantidade,
+        responsavel=responsavel,
+        requerente=requerente or "",
+        destino=destino or "",
+        observacao=observacao,
     )
 
 
@@ -118,3 +141,35 @@ def test_historico_vem_do_mais_recente_para_o_mais_antigo(repo, repo_movimentaco
 def test_historico_de_produto_inexistente(repo, repo_movimentacoes):
     with pytest.raises(ProdutoNaoEncontrado):
         servico.listar_movimentacoes(repo, repo_movimentacoes, 999)
+
+
+def test_saida_sem_requerente_e_recusada(repo, repo_movimentacoes, produto):
+    registrar(repo, repo_movimentacoes, produto.id, ENTRADA, 50)
+
+    with pytest.raises(DadosInvalidos, match="requerente"):
+        registrar(repo, repo_movimentacoes, produto.id, SAIDA, 10, requerente="")
+
+
+def test_saida_sem_destino_e_recusada(repo, repo_movimentacoes, produto):
+    registrar(repo, repo_movimentacoes, produto.id, ENTRADA, 50)
+
+    with pytest.raises(DadosInvalidos, match="destino"):
+        registrar(repo, repo_movimentacoes, produto.id, SAIDA, 10, destino="")
+
+
+def test_saida_registra_requerente_e_destino(repo, repo_movimentacoes, produto):
+    registrar(repo, repo_movimentacoes, produto.id, ENTRADA, 50)
+
+    saida = registrar(
+        repo, repo_movimentacoes, produto.id, SAIDA, 10, requerente="Ana", destino="Oficina"
+    )
+
+    assert (saida.requerente, saida.destino) == ("Ana", "Oficina")
+
+
+def test_entrada_ignora_requerente_e_destino(repo, repo_movimentacoes, produto):
+    entrada = registrar(
+        repo, repo_movimentacoes, produto.id, ENTRADA, 50, requerente="Ana", destino="Oficina"
+    )
+
+    assert (entrada.requerente, entrada.destino) == ("", "")

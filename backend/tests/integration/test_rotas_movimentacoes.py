@@ -1,4 +1,5 @@
 PRODUTO = {
+    "almoxarifado_id": 1,
     "codigo": "PAR-001",
     "nome": "Parafuso sextavado",
     "categoria": "Fixadores",
@@ -11,16 +12,30 @@ def criar_produto(client):
     return client.post("/produtos", json=PRODUTO).json()
 
 
-def movimentar(client, produto_id, tipo, quantidade, responsavel="Davi", observacao=""):
-    return client.post(
-        f"/produtos/{produto_id}/movimentacoes",
-        json={
-            "tipo": tipo,
-            "quantidade": quantidade,
-            "responsavel": responsavel,
-            "observacao": observacao,
-        },
-    )
+def movimentar(
+    client,
+    produto_id,
+    tipo,
+    quantidade,
+    responsavel="Davi",
+    observacao="",
+    requerente=None,
+    destino=None,
+):
+    corpo = {
+        "tipo": tipo,
+        "quantidade": quantidade,
+        "responsavel": responsavel,
+        "observacao": observacao,
+    }
+    if tipo == "SAIDA":
+        corpo["requerente"] = "Maria" if requerente is None else requerente
+        corpo["destino"] = "Manutenção" if destino is None else destino
+    else:
+        corpo["requerente"] = requerente or ""
+        corpo["destino"] = destino or ""
+
+    return client.post(f"/produtos/{produto_id}/movimentacoes", json=corpo)
 
 
 def test_entrada_atualiza_o_saldo(client):
@@ -111,3 +126,24 @@ def test_alerta_de_estoque_minimo_acompanha_as_movimentacoes(client):
 
     movimentar(client, produto["id"], "SAIDA", 60)
     assert client.get(f"/produtos/{produto['id']}").json()["abaixo_do_minimo"] is True
+
+
+def test_saida_sem_requerente_retorna_422(client):
+    produto = criar_produto(client)
+    movimentar(client, produto["id"], "ENTRADA", 50)
+
+    resposta = movimentar(client, produto["id"], "SAIDA", 10, requerente="")
+
+    assert resposta.status_code == 422
+    assert "requerente" in resposta.json()["detail"]
+
+
+def test_saida_guarda_requerente_e_destino(client):
+    produto = criar_produto(client)
+    movimentar(client, produto["id"], "ENTRADA", 50)
+    movimentar(client, produto["id"], "SAIDA", 10, requerente="Ana", destino="Oficina")
+
+    historico = client.get(f"/produtos/{produto['id']}/movimentacoes").json()
+
+    assert historico[0]["requerente"] == "Ana"
+    assert historico[0]["destino"] == "Oficina"

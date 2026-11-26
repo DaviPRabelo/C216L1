@@ -46,3 +46,23 @@ class EmailJaExiste(ErroDeDominio):
     def __init__(self, email: str):
         self.email = email
         super().__init__(f"Já existe uma conta com o e-mail {email}")
+
+
+class AlmoxarifadoNaoEncontrado(ErroDeDominio):
+    def __init__(self, almoxarifado_id: int):
+        self.almoxarifado_id = almoxarifado_id
+        super().__init__(f"Almoxarifado {almoxarifado_id} não encontrado")
+
+
+class NomeDeAlmoxarifadoJaExiste(ErroDeDominio):
+    def __init__(self, nome: str):
+        self.nome = nome
+        super().__init__(f"Já existe um almoxarifado chamado {nome}")
+
+
+class AlmoxarifadoComProdutos(ErroDeDominio):
+    def __init__(self, almoxarifado_id: int):
+        self.almoxarifado_id = almoxarifado_id
+        super().__init__(
+            "Não é possível excluir um almoxarifado que ainda tem produtos cadastrados."
+        )

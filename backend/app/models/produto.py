@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy import Integer, String
+from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -17,6 +17,9 @@ class ProdutoORM(Base):
     __tablename__ = "produtos"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    almoxarifado_id: Mapped[int] = mapped_column(
+        ForeignKey("almoxarifados.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
     codigo: Mapped[str] = mapped_column(String(20), nullable=False, unique=True, index=True)
     nome: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     descricao: Mapped[str] = mapped_column(String(200), nullable=False, default="")

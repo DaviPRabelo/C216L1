@@ -159,7 +159,7 @@ back-check: lint test
 check-all: back-check front-check
 
 fix:
-	cd $(BACKEND_DIR) && $(POETRY) run ruff check --fix .
+	-cd $(BACKEND_DIR) && $(POETRY) run ruff check --fix .
 	cd $(BACKEND_DIR) && $(POETRY) run ruff format .
 	cd $(FRONTEND_DIR) && $(NPM) run check -- --write
 

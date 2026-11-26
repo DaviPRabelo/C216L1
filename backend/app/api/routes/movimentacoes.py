@@ -35,5 +35,7 @@ def registrar(
         tipo=entrada.tipo,
         quantidade=entrada.quantidade,
         responsavel=entrada.responsavel,
+        requerente=entrada.requerente,
+        destino=entrada.destino,
         observacao=entrada.observacao,
     )

@@ -2,11 +2,14 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.errors import (
+    AlmoxarifadoComProdutos,
+    AlmoxarifadoNaoEncontrado,
     CodigoJaExiste,
     CredenciaisInvalidas,
     DadosInvalidos,
     EmailJaExiste,
     ErroDeDominio,
+    NomeDeAlmoxarifadoJaExiste,
     ProdutoComMovimentacoes,
     ProdutoNaoEncontrado,
     SaldoInsuficiente,
@@ -14,6 +17,9 @@ from app.errors import (
 
 STATUS_POR_ERRO: dict[type[ErroDeDominio], int] = {
     ProdutoNaoEncontrado: 404,
+    AlmoxarifadoNaoEncontrado: 404,
+    NomeDeAlmoxarifadoJaExiste: 409,
+    AlmoxarifadoComProdutos: 409,
     CodigoJaExiste: 409,
     ProdutoComMovimentacoes: 409,
     SaldoInsuficiente: 409,

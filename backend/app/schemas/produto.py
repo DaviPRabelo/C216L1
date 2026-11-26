@@ -4,6 +4,7 @@ from app.models.enums import UnidadeMedida
 
 
 class ProdutoEntrada(BaseModel):
+    almoxarifado_id: int
     codigo: str
     nome: str
     descricao: str = ""
@@ -13,6 +14,7 @@ class ProdutoEntrada(BaseModel):
 
 
 class ProdutoAtualizacao(BaseModel):
+    almoxarifado_id: int | None = None
     codigo: str | None = None
     nome: str | None = None
     descricao: str | None = None

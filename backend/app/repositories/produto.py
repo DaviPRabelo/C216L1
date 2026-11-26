@@ -24,21 +24,25 @@ class RepositorioDeProdutos:
         return self._sessao.scalars(select(ProdutoORM).where(ProdutoORM.codigo == codigo)).first()
 
     def listar(
-        self, categoria: str | None = None, apenas_abaixo_do_minimo: bool = False
+        self,
+        almoxarifado_id: int | None = None,
+        categoria: str | None = None,
+        apenas_abaixo_do_minimo: bool = False,
     ) -> list[ProdutoORM]:
         consulta = select(ProdutoORM).order_by(ProdutoORM.nome)
+        if almoxarifado_id is not None:
+            consulta = consulta.where(ProdutoORM.almoxarifado_id == almoxarifado_id)
         if categoria:
             consulta = consulta.where(ProdutoORM.categoria == categoria)
         if apenas_abaixo_do_minimo:
             consulta = consulta.where(ProdutoORM.saldo < ProdutoORM.estoque_minimo)
         return list(self._sessao.scalars(consulta))
 
-    def categorias(self) -> list[str]:
-        return list(
-            self._sessao.scalars(
-                select(ProdutoORM.categoria).distinct().order_by(ProdutoORM.categoria)
-            )
-        )
+    def categorias(self, almoxarifado_id: int | None = None) -> list[str]:
+        consulta = select(ProdutoORM.categoria).distinct().order_by(ProdutoORM.categoria)
+        if almoxarifado_id is not None:
+            consulta = consulta.where(ProdutoORM.almoxarifado_id == almoxarifado_id)
+        return list(self._sessao.scalars(consulta))
 
     def atualizar(self, produto: ProdutoORM, **campos) -> ProdutoORM:
         for campo, valor in campos.items():

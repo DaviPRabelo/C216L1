@@ -55,6 +55,7 @@ def _garantir_codigo_livre(
 
 def criar_produto(
     repo: RepositorioDeProdutos,
+    almoxarifado_id: int,
     codigo: str,
     nome: str,
     categoria: str,
@@ -68,6 +69,7 @@ def criar_produto(
     _garantir_codigo_livre(repo, codigo)
 
     return repo.adicionar(
+        almoxarifado_id=almoxarifado_id,
         codigo=codigo,
         nome=nome,
         descricao=descricao,
@@ -87,19 +89,21 @@ def obter_produto(repo: RepositorioDeProdutos, produto_id: int) -> ProdutoORM:
 
 def listar_produtos(
     repo: RepositorioDeProdutos,
+    almoxarifado_id: int | None = None,
     categoria: str | None = None,
     apenas_abaixo_do_minimo: bool = False,
 ) -> list[ProdutoORM]:
-    return repo.listar(categoria, apenas_abaixo_do_minimo)
+    return repo.listar(almoxarifado_id, categoria, apenas_abaixo_do_minimo)
 
 
-def listar_categorias(repo: RepositorioDeProdutos) -> list[str]:
-    return repo.categorias()
+def listar_categorias(repo: RepositorioDeProdutos, almoxarifado_id: int | None = None) -> list[str]:
+    return repo.categorias(almoxarifado_id)
 
 
 def atualizar_produto(
     repo: RepositorioDeProdutos,
     produto_id: int,
+    almoxarifado_id: int | None = None,
     codigo: str | None = None,
     nome: str | None = None,
     descricao: str | None = None,
@@ -109,6 +113,7 @@ def atualizar_produto(
 ) -> ProdutoORM:
     produto = obter_produto(repo, produto_id)
 
+    novo_almoxarifado = produto.almoxarifado_id if almoxarifado_id is None else almoxarifado_id
     novo_codigo = produto.codigo if codigo is None else codigo
     novo_nome = produto.nome if nome is None else nome
     nova_descricao = produto.descricao if descricao is None else descricao
@@ -123,6 +128,7 @@ def atualizar_produto(
 
     return repo.atualizar(
         produto,
+        almoxarifado_id=novo_almoxarifado,
         codigo=novo_codigo,
         nome=novo_nome,
         descricao=nova_descricao,

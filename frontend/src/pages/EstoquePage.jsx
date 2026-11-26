@@ -97,7 +97,7 @@ export default function EstoquePage() {
             htmlFor="filtro-categoria"
             className="mb-1 block text-sm font-medium text-slate-700"
           >
-            Categoria
+            Filtrar por categoria
           </label>
           <select
             id="filtro-categoria"

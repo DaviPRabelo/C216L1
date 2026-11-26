@@ -19,7 +19,7 @@ export default function Painel({ produtos }) {
       <Indicador rotulo="Produtos" valor={produtos.length} />
       <Indicador rotulo="Categorias" valor={categorias} />
       <Indicador rotulo="Unidades em estoque" valor={unidades} />
-      <Indicador rotulo="Abaixo do mínimo" valor={emFalta} destaque={emFalta > 0} />
+      <Indicador rotulo="Itens em falta" valor={emFalta} destaque={emFalta > 0} />
     </div>
   );
 }

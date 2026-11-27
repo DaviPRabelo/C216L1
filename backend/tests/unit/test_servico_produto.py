@@ -160,3 +160,46 @@ def test_listar_categorias_sem_repeticao(repo):
 def test_unidade_invalida_e_barrada_pelo_enum():
     with pytest.raises(ValueError):
         UnidadeMedida("TONELADA")
+
+
+PNG_MINIMO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg=="
+
+
+def test_produto_nasce_sem_foto(repo):
+    criado = servico.criar_produto(repo, **PRODUTO_PADRAO)
+
+    assert criado.foto == ""
+
+
+def test_aceita_foto_em_data_url(repo):
+    criado = servico.criar_produto(repo, **PRODUTO_PADRAO, foto=PNG_MINIMO)
+
+    assert criado.foto == PNG_MINIMO
+
+
+def test_recusa_arquivo_que_nao_e_imagem(repo):
+    with pytest.raises(DadosInvalidos, match="imagem"):
+        servico.criar_produto(repo, **PRODUTO_PADRAO, foto="data:application/pdf;base64,AAAA")
+
+
+def test_recusa_imagem_grande_demais(repo):
+    enorme = "data:image/png;base64," + "A" * 700_000
+
+    with pytest.raises(DadosInvalidos, match="grande"):
+        servico.criar_produto(repo, **PRODUTO_PADRAO, foto=enorme)
+
+
+def test_atualizar_preserva_a_foto_quando_nao_enviada(repo):
+    criado = servico.criar_produto(repo, **PRODUTO_PADRAO, foto=PNG_MINIMO)
+
+    atualizado = servico.atualizar_produto(repo, criado.id, nome="Outro nome")
+
+    assert atualizado.foto == PNG_MINIMO
+
+
+def test_atualizar_pode_remover_a_foto(repo):
+    criado = servico.criar_produto(repo, **PRODUTO_PADRAO, foto=PNG_MINIMO)
+
+    atualizado = servico.atualizar_produto(repo, criado.id, foto="")
+
+    assert atualizado.foto == ""

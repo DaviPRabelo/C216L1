@@ -171,3 +171,29 @@ def test_remover_produto_com_movimentacoes(client):
 
     assert resposta.status_code == 409
     assert "histórico" in resposta.json()["detail"]
+
+
+PNG_MINIMO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg=="
+
+
+def test_criar_produto_com_foto(client):
+    resposta = client.post("/produtos", json={**PRODUTO, "foto": PNG_MINIMO})
+
+    assert resposta.status_code == 201
+    assert resposta.json()["foto"] == PNG_MINIMO
+
+
+def test_criar_produto_com_arquivo_que_nao_e_imagem(client):
+    resposta = client.post(
+        "/produtos", json={**PRODUTO, "foto": "data:application/pdf;base64,AAAA"}
+    )
+
+    assert resposta.status_code == 422
+
+
+def test_foto_sobrevive_a_consulta(client):
+    criado = client.post("/produtos", json={**PRODUTO, "foto": PNG_MINIMO}).json()
+
+    lido = client.get(f"/produtos/{criado['id']}").json()
+
+    assert lido["foto"] == PNG_MINIMO

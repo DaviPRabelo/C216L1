@@ -164,6 +164,8 @@ fix:
 	cd $(FRONTEND_DIR) && $(NPM) run check -- --write
 
 ps: docker-ps
+frontend-lint: front-lint
+frontend-format: front-format
 frontend-test: front-test
 frontend-check: front-check
 frontend-build: front-build

@@ -34,6 +34,8 @@ que o saldo é recusada pelo servidor com a quantidade disponível na mensagem.
 - CRUD completo pela interface, dentro do depósito ativo
 - Código único, unidade de medida (UN, CX, KG, L) e estoque mínimo
 - Alerta visual quando o saldo fica abaixo do mínimo
+- Foto do produto, escolhida do computador e exibida no cartão
+- Código de barras (Code 128) gerado a partir do código do produto
 - Filtros por categoria e por "somente abaixo do mínimo"
 - Não é possível excluir um produto que já teve movimentações
 
@@ -51,7 +53,7 @@ que o saldo é recusada pelo servidor com a quantidade disponível na mensagem.
 | Persistência | PostgreSQL, SQLAlchemy 2.0, Alembic |
 | Dependências (backend) | Poetry |
 | Qualidade (backend) | Ruff, Pytest |
-| Frontend | JavaScript, React 19, Vite, Tailwind CSS 4 |
+| Frontend | JavaScript, React 19, Vite, Tailwind CSS 4, JsBarcode |
 | Dependências (frontend) | npm |
 | Qualidade (frontend) | Biome, Vitest, Testing Library, Playwright |
 | Infraestrutura | Docker, Docker Compose, Makefile |
@@ -133,8 +135,8 @@ O Alembic lê a `DATABASE_URL` do ambiente — nenhuma credencial fica no
 ## Testes
 
 ```bash
-make test               # backend: 140 testes (unitários e integração)
-make frontend-test      # frontend: 80 testes (unitários e integração)
+make test               # backend: 149 testes (unitários e integração)
+make frontend-test      # frontend: 94 testes (unitários e integração)
 make e2e                # ponta a ponta: 3 testes em navegador real
 make check-all          # tudo acima, mais lint e build
 ```
@@ -223,6 +225,13 @@ aplicação mapeia cada exceção para o código HTTP correspondente, em vez de
 `try/except` repetido em cada rota.
 
 ## Limitações conhecidas
+
+**Fotos guardadas no banco.** A imagem escolhida é convertida para data URL
+(base64) e gravada numa coluna de texto, em vez de ir para um servidor de
+arquivos. Isso evita infraestrutura extra e mantém a foto versionada junto do
+produto, mas a listagem carrega as imagens no mesmo JSON dos produtos — o que
+funciona bem na escala deste projeto e não escalaria para milhares de itens.
+O tamanho é limitado a ~400 KB por imagem, validado no navegador e no servidor.
 
 O login valida as credenciais contra o banco e guarda o operador no navegador,
 mas **não emite token**: as rotas da API continuam abertas a quem as chamar

@@ -45,6 +45,14 @@ que o saldo é recusada pelo servidor com a quantidade disponível na mensagem.
 - Saída maior que o saldo é recusada com `409` e mensagem explicativa
 - O saldo e o lançamento são gravados na mesma transação
 
+**Inventário**
+- Abertura de uma contagem física por almoxarifado, em uma data e com um responsável
+- A abertura **congela** o saldo de cada produto naquele instante
+- O operador registra o que encontrou na prateleira; o sistema calcula a divergência
+- Falta, sobra e itens conferidos aparecem destacados na tela
+- Só existe um inventário aberto por depósito; fechar exige todos os itens contados
+- Inventário fechado não aceita alterações
+
 ## Tecnologias
 
 | Camada | Ferramentas |
@@ -135,8 +143,8 @@ O Alembic lê a `DATABASE_URL` do ambiente — nenhuma credencial fica no
 ## Testes
 
 ```bash
-make test               # backend: 149 testes (unitários e integração)
-make frontend-test      # frontend: 94 testes (unitários e integração)
+make test               # backend: 168 testes (unitários e integração)
+make frontend-test      # frontend: 109 testes (unitários e integração)
 make e2e                # ponta a ponta: 3 testes em navegador real
 make check-all          # tudo acima, mais lint e build
 ```
@@ -196,7 +204,7 @@ backend/
 frontend/
 ├── src/
 │   ├── App.jsx              # navegação entre as telas
-│   ├── pages/               # Login, Início, Almoxarifados, Estoque, Movimentações
+│   ├── pages/               # Login, Início, Almoxarifados, Estoque, Movimentações, Inventário
 │   ├── components/          # formulários, cartões, histórico
 │   ├── services/            # chamadas HTTP
 │   ├── context/             # sessão do operador e depósito ativo
@@ -225,6 +233,12 @@ aplicação mapeia cada exceção para o código HTTP correspondente, em vez de
 `try/except` repetido em cada rota.
 
 ## Limitações conhecidas
+
+**O inventário não ajusta o saldo.** A contagem registra e evidencia a
+divergência, mas não gera movimentações de acerto automáticas — o saldo do
+sistema continua como estava. O ajuste seria o passo seguinte natural: cada
+divergência viraria uma entrada ou saída de acerto, mantendo o histórico como
+única fonte do saldo.
 
 **Fotos guardadas no banco.** A imagem escolhida é convertida para data URL
 (base64) e gravada numa coluna de texto, em vez de ir para um servidor de

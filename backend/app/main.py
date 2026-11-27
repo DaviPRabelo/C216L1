@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import almoxarifados, auth, movimentacoes, produtos
+from app.api.routes import almoxarifados, auth, inventarios, movimentacoes, produtos
 from app.api.tratamento_de_erros import registrar_tratadores
 from app.config import CORS_ORIGINS
 
@@ -24,6 +24,7 @@ registrar_tratadores(app)
 
 app.include_router(produtos.router)
 app.include_router(movimentacoes.router)
+app.include_router(inventarios.router)
 
 
 @app.get("/", tags=["saude"])

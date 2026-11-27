@@ -60,12 +60,19 @@ async function cadastrarProduto(page) {
 async function movimentar(page, { tipo, quantidade, requerente, destino }) {
   await page.getByRole("button", { name: "Movimentações", exact: true }).click();
   await page.getByRole("button", { name: "Movimentar Parafuso E2E" }).click();
+
+  // O clique dispara o carregamento do histórico; só depois dele o formulário
+  // para de ser remontado e aceita os valores com segurança.
+  await expect(page.getByRole("heading", { name: "Histórico" })).toBeVisible();
+
   await page.getByLabel("Tipo").selectOption(tipo);
-  await page.getByLabel("Quantidade").fill(String(quantidade));
   if (tipo === "SAIDA") {
+    await expect(page.getByLabel("Requerente")).toBeVisible();
     await page.getByLabel("Requerente").fill(requerente);
     await page.getByLabel("Destino").fill(destino);
   }
+  await page.getByLabel("Quantidade").fill(String(quantidade));
+
   await page.getByRole("button", { name: "Registrar movimentação" }).click();
 }
 

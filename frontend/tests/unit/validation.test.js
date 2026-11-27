@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   ehValido,
+  FOTO_MAXIMA,
   TIPOS,
   UNIDADES,
+  validarFoto,
   validarLogin,
   validarMovimentacao,
   validarProduto,
@@ -124,5 +126,32 @@ describe("ehValido", () => {
 
   it("é falso com qualquer erro", () => {
     expect(ehValido({ nome: "obrigatório" })).toBe(false);
+  });
+});
+
+describe("validarFoto", () => {
+  const PNG = "data:image/png;base64,iVBORw0KGgo=";
+
+  it("aceita ausência de foto", () => {
+    expect(validarFoto("")).toBeNull();
+    expect(validarFoto(undefined)).toBeNull();
+  });
+
+  it("aceita uma data URL de imagem", () => {
+    expect(validarFoto(PNG)).toBeNull();
+  });
+
+  it("recusa arquivo que não é imagem", () => {
+    expect(validarFoto("data:application/pdf;base64,AAAA")).toMatch(/imagem/);
+  });
+
+  it("recusa imagem acima do limite", () => {
+    expect(validarFoto(`data:image/png;base64,${"A".repeat(FOTO_MAXIMA)}`)).toMatch(/grande/);
+  });
+
+  it("entra no resultado de validarProduto", () => {
+    const erros = validarProduto({ ...PRODUTO, foto: "data:text/plain;base64,AA" });
+
+    expect(erros).toHaveProperty("foto");
   });
 });

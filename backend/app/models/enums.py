@@ -15,3 +15,10 @@ class TipoMovimentacao(str, Enum):
 
     ENTRADA = "ENTRADA"
     SAIDA = "SAIDA"
+
+
+class StatusInventario(str, Enum):
+    """Situação de uma contagem de inventário."""
+
+    ABERTO = "ABERTO"
+    FECHADO = "FECHADO"

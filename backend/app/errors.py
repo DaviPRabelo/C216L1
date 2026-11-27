@@ -66,3 +66,36 @@ class AlmoxarifadoComProdutos(ErroDeDominio):
         super().__init__(
             "Não é possível excluir um almoxarifado que ainda tem produtos cadastrados."
         )
+
+
+class InventarioNaoEncontrado(ErroDeDominio):
+    def __init__(self, inventario_id: int):
+        self.inventario_id = inventario_id
+        super().__init__(f"Inventário {inventario_id} não encontrado")
+
+
+class JaExisteInventarioAberto(ErroDeDominio):
+    def __init__(self, inventario_id: int):
+        self.inventario_id = inventario_id
+        super().__init__(
+            f"Já existe um inventário aberto neste almoxarifado (nº {inventario_id}). "
+            "Feche-o antes de abrir outro."
+        )
+
+
+class InventarioJaFechado(ErroDeDominio):
+    def __init__(self, inventario_id: int):
+        self.inventario_id = inventario_id
+        super().__init__("Este inventário já foi fechado e não aceita alterações")
+
+
+class ContagemIncompleta(ErroDeDominio):
+    def __init__(self, faltando: int):
+        self.faltando = faltando
+        super().__init__(f"Ainda faltam {faltando} itens para contar antes de fechar o inventário")
+
+
+class ItemDeInventarioNaoEncontrado(ErroDeDominio):
+    def __init__(self, produto_id: int):
+        self.produto_id = produto_id
+        super().__init__(f"O produto {produto_id} não faz parte deste inventário")

@@ -61,11 +61,13 @@ async function movimentar(page, { tipo, quantidade, requerente, destino }) {
   await page.getByRole("button", { name: "Movimentações", exact: true }).click();
   await page.getByRole("button", { name: "Movimentar Parafuso E2E" }).click();
 
-  // O clique dispara o carregamento do histórico; só depois dele o formulário
-  // para de ser remontado e aceita os valores com segurança.
+  // O clique dispara o carregamento do histórico. Enquanto essa requisição não
+  // aterrissa, o formulário ainda é re-renderizado e descarta o que foi digitado.
   await expect(page.getByRole("heading", { name: "Histórico" })).toBeVisible();
+  await page.waitForLoadState("networkidle");
 
   await page.getByLabel("Tipo").selectOption(tipo);
+  await expect(page.getByLabel("Tipo")).toHaveValue(tipo);
   if (tipo === "SAIDA") {
     await expect(page.getByLabel("Requerente")).toBeVisible();
     await page.getByLabel("Requerente").fill(requerente);

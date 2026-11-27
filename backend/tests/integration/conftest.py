@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.api.dependencias import (
     obter_repositorio_de_almoxarifados,
+    obter_repositorio_de_inventarios,
     obter_repositorio_de_movimentacoes,
     obter_repositorio_de_produtos,
     obter_repositorio_de_usuarios,
@@ -15,10 +16,13 @@ from app.database.base import Base
 from app.main import app
 from app.models import (  # noqa: F401 — registra as tabelas
     AlmoxarifadoORM,
+    ContagemItemORM,
+    InventarioORM,
     MovimentacaoORM,
     ProdutoORM,
 )
 from app.repositories.almoxarifado import RepositorioDeAlmoxarifados
+from app.repositories.inventario import RepositorioDeInventarios
 from app.repositories.movimentacao import RepositorioDeMovimentacoes
 from app.repositories.produto import RepositorioDeProdutos
 from app.repositories.usuario import RepositorioDeUsuarios
@@ -78,12 +82,15 @@ def repo_movimentacoes(sessao) -> RepositorioDeMovimentacoes:
 
 
 @pytest.fixture
-def client(repo, repo_movimentacoes, repo_usuarios, repo_almoxarifados) -> TestClient:
+def client(
+    repo, repo_movimentacoes, repo_usuarios, repo_almoxarifados, repo_inventarios
+) -> TestClient:
     """TestClient com os três repositórios sobre a mesma sessão de teste."""
     app.dependency_overrides[obter_repositorio_de_produtos] = lambda: repo
     app.dependency_overrides[obter_repositorio_de_movimentacoes] = lambda: repo_movimentacoes
     app.dependency_overrides[obter_repositorio_de_usuarios] = lambda: repo_usuarios
     app.dependency_overrides[obter_repositorio_de_almoxarifados] = lambda: repo_almoxarifados
+    app.dependency_overrides[obter_repositorio_de_inventarios] = lambda: repo_inventarios
     yield TestClient(app)
     app.dependency_overrides.clear()
 
@@ -101,3 +108,8 @@ def deposito(request, sessao):
     return RepositorioDeAlmoxarifados(sessao).adicionar(
         nome="Central", local="Galpao A", responsavel="Davi", ativo=True
     )
+
+
+@pytest.fixture
+def repo_inventarios(sessao) -> RepositorioDeInventarios:
+    return RepositorioDeInventarios(sessao)

@@ -11,6 +11,7 @@ class ProdutoEntrada(BaseModel):
     categoria: str
     unidade: UnidadeMedida
     estoque_minimo: int = 0
+    foto: str = ""
 
 
 class ProdutoAtualizacao(BaseModel):
@@ -21,6 +22,7 @@ class ProdutoAtualizacao(BaseModel):
     categoria: str | None = None
     unidade: UnidadeMedida | None = None
     estoque_minimo: int | None = None
+    foto: str | None = None
 
 
 class Produto(ProdutoEntrada):

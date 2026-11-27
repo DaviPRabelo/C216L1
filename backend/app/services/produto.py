@@ -13,6 +13,8 @@ NOME_MAXIMO = 100
 DESCRICAO_MAXIMA = 200
 CATEGORIA_MAXIMA = 50
 ESTOQUE_MINIMO_MAXIMO = 999_999
+# Data URL de uma imagem de ~400 KB em base64.
+FOTO_MAXIMA = 600_000
 
 
 def _normalizar_e_validar(
@@ -45,6 +47,18 @@ def _normalizar_e_validar(
     return codigo, nome, descricao, categoria
 
 
+def _validar_foto(foto: str) -> str:
+    """A imagem chega embutida como data URL; aqui so conferimos forma e tamanho."""
+    foto = (foto or "").strip()
+    if not foto:
+        return ""
+    if not foto.startswith("data:image/"):
+        raise DadosInvalidos("O arquivo enviado nao e uma imagem")
+    if len(foto) > FOTO_MAXIMA:
+        raise DadosInvalidos("A imagem e grande demais; use uma de ate 400 KB")
+    return foto
+
+
 def _garantir_codigo_livre(
     repo: RepositorioDeProdutos, codigo: str, produto_id: int | None = None
 ) -> None:
@@ -62,11 +76,13 @@ def criar_produto(
     unidade: UnidadeMedida,
     descricao: str = "",
     estoque_minimo: int = 0,
+    foto: str = "",
 ) -> ProdutoORM:
     codigo, nome, descricao, categoria = _normalizar_e_validar(
         codigo, nome, descricao, categoria, estoque_minimo
     )
     _garantir_codigo_livre(repo, codigo)
+    foto = _validar_foto(foto)
 
     return repo.adicionar(
         almoxarifado_id=almoxarifado_id,
@@ -76,6 +92,7 @@ def criar_produto(
         categoria=categoria,
         unidade=unidade,
         estoque_minimo=estoque_minimo,
+        foto=foto,
         saldo=0,
     )
 
@@ -110,6 +127,7 @@ def atualizar_produto(
     categoria: str | None = None,
     unidade: UnidadeMedida | None = None,
     estoque_minimo: int | None = None,
+    foto: str | None = None,
 ) -> ProdutoORM:
     produto = obter_produto(repo, produto_id)
 
@@ -120,6 +138,7 @@ def atualizar_produto(
     nova_categoria = produto.categoria if categoria is None else categoria
     nova_unidade = produto.unidade if unidade is None else unidade
     novo_minimo = produto.estoque_minimo if estoque_minimo is None else estoque_minimo
+    nova_foto = _validar_foto(produto.foto if foto is None else foto)
 
     novo_codigo, novo_nome, nova_descricao, nova_categoria = _normalizar_e_validar(
         novo_codigo, novo_nome, nova_descricao, nova_categoria, novo_minimo
@@ -135,6 +154,7 @@ def atualizar_produto(
         categoria=nova_categoria,
         unidade=nova_unidade,
         estoque_minimo=novo_minimo,
+        foto=nova_foto,
     )
 
 

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -34,6 +34,9 @@ class ProdutoORM(Base):
         nullable=False,
     )
     estoque_minimo: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    # Imagem embutida como data URL (base64). Vazio quando nao ha foto.
+    foto: Mapped[str] = mapped_column(Text, nullable=False, default="")
 
     # Mantido pelo serviço de movimentação, nunca editado diretamente.
     saldo: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

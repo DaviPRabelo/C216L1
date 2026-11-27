@@ -53,6 +53,7 @@ def criar(
         unidade=entrada.unidade,
         descricao=entrada.descricao,
         estoque_minimo=entrada.estoque_minimo,
+        foto=entrada.foto,
     )
 
 
@@ -74,6 +75,7 @@ def substituir(
         categoria=entrada.categoria,
         unidade=entrada.unidade,
         estoque_minimo=entrada.estoque_minimo,
+        foto=entrada.foto,
     )
 
 

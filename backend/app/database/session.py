@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+psycopg://admin:adminpassword@localhost:5432/c216_db",
+    "postgresql+psycopg://admin:adminpassword@localhost:5432/almoxarifado",
 )
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)

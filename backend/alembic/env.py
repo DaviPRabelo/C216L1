@@ -17,7 +17,7 @@ config.set_main_option(
     "sqlalchemy.url",
     os.getenv(
         "DATABASE_URL",
-        "postgresql+psycopg://admin:adminpassword@localhost:5432/c216_db",
+        "postgresql+psycopg://admin:adminpassword@localhost:5432/almoxarifado",
     ),
 )
 

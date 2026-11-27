@@ -10,11 +10,31 @@ export const TIPOS = [
   { valor: "SAIDA", rotulo: "Saída" },
 ];
 
+// Mesmo limite do backend: data URL de uma imagem de ~400 KB.
+export const FOTO_MAXIMA = 600_000;
+
+export function validarFoto(foto) {
+  if (!foto) return null;
+  if (!foto.startsWith("data:image/")) return "O arquivo precisa ser uma imagem";
+  if (foto.length > FOTO_MAXIMA) {
+    return "A imagem é grande demais; use uma de até 400 KB";
+  }
+  return null;
+}
+
 function texto(valor) {
   return (valor ?? "").trim();
 }
 
-export function validarProduto({ codigo, nome, descricao, categoria, unidade, estoque_minimo }) {
+export function validarProduto({
+  codigo,
+  nome,
+  descricao,
+  categoria,
+  unidade,
+  estoque_minimo,
+  foto,
+}) {
   const erros = {};
 
   if (!texto(codigo)) erros.codigo = "O código é obrigatório";
@@ -36,6 +56,9 @@ export function validarProduto({ codigo, nome, descricao, categoria, unidade, es
   } else if (minimo < 0) {
     erros.estoque_minimo = "O estoque mínimo não pode ser negativo";
   }
+
+  const erroFoto = validarFoto(foto);
+  if (erroFoto) erros.foto = erroFoto;
 
   return erros;
 }

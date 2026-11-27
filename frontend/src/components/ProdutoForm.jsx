@@ -9,6 +9,7 @@ const VAZIO = {
   categoria: "",
   unidade: "UN",
   estoque_minimo: "0",
+  foto: "",
 };
 
 export default function ProdutoForm({ produto, onSalvar, onCancelar }) {
@@ -29,6 +30,14 @@ export default function ProdutoForm({ produto, onSalvar, onCancelar }) {
     setErros({});
   }, [produto]);
 
+  function lerArquivo(evento) {
+    const arquivo = evento.target.files?.[0];
+    if (!arquivo) return;
+    const leitor = new FileReader();
+    leitor.onload = () => aoMudar("foto", String(leitor.result));
+    leitor.readAsDataURL(arquivo);
+  }
+
   function aoMudar(campo, valor) {
     setValores((anterior) => ({ ...anterior, [campo]: valor }));
   }
@@ -48,6 +57,7 @@ export default function ProdutoForm({ produto, onSalvar, onCancelar }) {
         categoria: valores.categoria.trim(),
         unidade: valores.unidade,
         estoque_minimo: Number(valores.estoque_minimo),
+        foto: valores.foto,
       });
     } catch {
       // A página exibe a mensagem; o formulário preserva o que foi digitado.
@@ -129,6 +139,32 @@ export default function ProdutoForm({ produto, onSalvar, onCancelar }) {
           onChange={(e) => aoMudar("descricao", e.target.value)}
           className={CAMPO}
         />
+      </Campo>
+
+      <Campo id="foto" rotulo="Foto do produto" erro={erros.foto}>
+        <input
+          id="foto"
+          type="file"
+          accept="image/*"
+          onChange={lerArquivo}
+          className="w-full text-sm text-slate-600 file:mr-3 file:rounded file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:text-slate-700"
+        />
+        {valores.foto && (
+          <div className="mt-2 flex items-center gap-3">
+            <img
+              src={valores.foto}
+              alt="Prévia do produto"
+              className="h-20 w-20 rounded border border-slate-200 object-cover"
+            />
+            <button
+              type="button"
+              onClick={() => aoMudar("foto", "")}
+              className="text-sm text-red-700 hover:underline"
+            >
+              Remover foto
+            </button>
+          </div>
+        )}
       </Campo>
 
       <div className="flex gap-2">

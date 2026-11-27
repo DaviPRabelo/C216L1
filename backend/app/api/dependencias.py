@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_session
 from app.repositories.almoxarifado import RepositorioDeAlmoxarifados
+from app.repositories.inventario import RepositorioDeInventarios
 from app.repositories.movimentacao import RepositorioDeMovimentacoes
 from app.repositories.produto import RepositorioDeProdutos
 from app.repositories.usuario import RepositorioDeUsuarios
@@ -30,3 +31,9 @@ def obter_repositorio_de_almoxarifados(
     sessao: Session = Depends(get_session),
 ) -> RepositorioDeAlmoxarifados:
     return RepositorioDeAlmoxarifados(sessao)
+
+
+def obter_repositorio_de_inventarios(
+    sessao: Session = Depends(get_session),
+) -> RepositorioDeInventarios:
+    return RepositorioDeInventarios(sessao)

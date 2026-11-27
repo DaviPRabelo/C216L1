@@ -3,6 +3,7 @@ import { useSessao } from "./context/SessaoContext.jsx";
 import AlmoxarifadosPage from "./pages/AlmoxarifadosPage.jsx";
 import EstoquePage from "./pages/EstoquePage.jsx";
 import InicioPage from "./pages/InicioPage.jsx";
+import InventarioPage from "./pages/InventarioPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import MovimentacoesPage from "./pages/MovimentacoesPage.jsx";
 
@@ -12,6 +13,7 @@ const TELAS = [
   { id: "almoxarifados", rotulo: "Almoxarifados", exigeDeposito: false },
   { id: "estoque", rotulo: "Estoque", exigeDeposito: true },
   { id: "movimentacoes", rotulo: "Movimentações", exigeDeposito: true },
+  { id: "inventario", rotulo: "Inventário", exigeDeposito: true },
 ];
 
 export default function App() {
@@ -29,6 +31,7 @@ export default function App() {
       return <AlmoxarifadosPage aoEscolher={() => setTela("estoque")} />;
     if (tela === "estoque") return <EstoquePage />;
     if (tela === "movimentacoes") return <MovimentacoesPage />;
+    if (tela === "inventario") return <InventarioPage />;
     return <InicioPage aoNavegar={setTela} />;
   }
 

@@ -4,7 +4,7 @@ from app.errors import (
     ProdutoComMovimentacoes,
     ProdutoNaoEncontrado,
 )
-from app.models.enums import UnidadeMedida
+from app.models.enums import CategoriaProduto, UnidadeMedida
 from app.models.produto import ProdutoORM
 from app.repositories.produto import RepositorioDeProdutos
 
@@ -14,6 +14,7 @@ DESCRICAO_MAXIMA = 200
 CATEGORIA_MAXIMA = 50
 ESTOQUE_MINIMO_MAXIMO = 999_999
 # Data URL de uma imagem de ~400 KB em base64.
+CATEGORIAS_DISPONIVEIS = [categoria.value for categoria in CategoriaProduto]
 FOTO_MAXIMA = 600_000
 
 
@@ -23,7 +24,6 @@ def _normalizar_e_validar(
     codigo = (codigo or "").strip().upper()
     nome = (nome or "").strip()
     descricao = (descricao or "").strip()
-    categoria = (categoria or "").strip()
 
     if not codigo:
         raise DadosInvalidos("O código é obrigatório")
@@ -35,10 +35,11 @@ def _normalizar_e_validar(
         raise DadosInvalidos(f"O nome deve ter até {NOME_MAXIMO} caracteres")
     if len(descricao) > DESCRICAO_MAXIMA:
         raise DadosInvalidos(f"A descrição deve ter até {DESCRICAO_MAXIMA} caracteres")
-    if not categoria:
-        raise DadosInvalidos("A categoria é obrigatória")
-    if len(categoria) > CATEGORIA_MAXIMA:
-        raise DadosInvalidos(f"A categoria deve ter até {CATEGORIA_MAXIMA} caracteres")
+    try:
+        categoria = CategoriaProduto(categoria)
+    except ValueError as erro:
+        validas = ", ".join(c.value for c in CategoriaProduto)
+        raise DadosInvalidos(f"Categoria inválida. Use uma destas: {validas}") from erro
     if estoque_minimo < 0:
         raise DadosInvalidos("O estoque mínimo não pode ser negativo")
     if estoque_minimo > ESTOQUE_MINIMO_MAXIMO:

@@ -69,3 +69,30 @@ def test_login_com_email_inexistente_retorna_401(client):
     resposta = client.post("/auth/login", json={"email": "x@y.com", "senha": "senha123"})
 
     assert resposta.status_code == 401
+
+
+def test_papel_padrao_e_empregado(client):
+    assert client.post("/auth/registrar", json=USUARIO).json()["papel"] == "EMPREGADO"
+
+
+def test_registrar_com_papel_escolhido(client):
+    resposta = client.post("/auth/registrar", json={**USUARIO, "papel": "ADMIN"})
+
+    assert resposta.status_code == 201
+    assert resposta.json()["papel"] == "ADMIN"
+
+
+def test_registrar_com_papel_invalido_retorna_422(client):
+    assert client.post("/auth/registrar", json={**USUARIO, "papel": "CHEFE"}).status_code == 422
+
+
+def test_listar_usuarios(client):
+    client.post("/auth/registrar", json=USUARIO)
+    client.post(
+        "/auth/registrar",
+        json={**USUARIO, "nome": "Ana", "email": "ana@almox.com", "papel": "GERENTE"},
+    )
+
+    corpo = client.get("/auth/usuarios").json()
+
+    assert [(u["nome"], u["papel"]) for u in corpo] == [("Ana", "GERENTE"), ("Davi", "EMPREGADO")]

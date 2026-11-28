@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pytest
 
 from app.models.almoxarifado import AlmoxarifadoORM
-from app.models.enums import TipoMovimentacao, UnidadeMedida
+from app.models.enums import PapelUsuario, TipoMovimentacao, UnidadeMedida
 from app.models.movimentacao import MovimentacaoORM
 from app.models.produto import ProdutoORM
 from app.models.usuario import UsuarioORM
@@ -116,9 +116,21 @@ class RepositorioDeUsuariosFalso:
         self._usuarios: dict[int, UsuarioORM] = {}
         self._proximo_id = 1
 
-    def adicionar(self, nome: str, email: str, setor: str, senha_hash: str) -> UsuarioORM:
+    def adicionar(
+        self,
+        nome: str,
+        email: str,
+        setor: str,
+        senha_hash: str,
+        papel: PapelUsuario = PapelUsuario.EMPREGADO,
+    ) -> UsuarioORM:
         usuario = UsuarioORM(
-            id=self._proximo_id, nome=nome, email=email, setor=setor, senha_hash=senha_hash
+            id=self._proximo_id,
+            nome=nome,
+            email=email,
+            setor=setor,
+            senha_hash=senha_hash,
+            papel=papel,
         )
         self._usuarios[usuario.id] = usuario
         self._proximo_id += 1
@@ -155,7 +167,6 @@ def produto(repo):
 ALMOXARIFADO_PADRAO = {
     "nome": "Central",
     "local": "Galpao A",
-    "responsavel": "Davi",
 }
 
 

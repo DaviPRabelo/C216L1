@@ -1,4 +1,6 @@
-NOVO = {"nome": "Obras", "local": "Patio 2", "responsavel": "Ana"}
+NOVO = {"nome": "Obras", "local": "Patio 2"}
+
+EMPREGADO = {"nome": "Davi", "email": "davi@almox.com", "setor": "TI", "senha": "senha123"}
 
 PRODUTO = {
     "almoxarifado_id": 1,
@@ -58,11 +60,33 @@ def test_obter_inexistente_retorna_404(client):
 
 
 def test_atualizar_parcialmente(client):
-    resposta = client.patch("/almoxarifados/1", json={"responsavel": "Carla"})
+    resposta = client.patch("/almoxarifados/1", json={"local": "Galpao B"})
 
     assert resposta.status_code == 200
-    assert resposta.json()["responsavel"] == "Carla"
+    assert resposta.json()["local"] == "Galpao B"
     assert resposta.json()["nome"] == "Central"
+
+
+def test_definir_empregado_como_responsavel(client):
+    empregado = client.post("/auth/registrar", json=EMPREGADO).json()
+
+    resposta = client.patch("/almoxarifados/1", json={"responsavel_id": empregado["id"]})
+
+    assert resposta.status_code == 200
+    assert resposta.json()["responsavel_id"] == empregado["id"]
+    assert resposta.json()["responsavel_nome"] == "Davi"
+
+
+def test_responsavel_gerente_retorna_422(client):
+    gerente = client.post("/auth/registrar", json={**EMPREGADO, "papel": "GERENTE"}).json()
+
+    resposta = client.patch("/almoxarifados/1", json={"responsavel_id": gerente["id"]})
+
+    assert resposta.status_code == 422
+
+
+def test_responsavel_inexistente_retorna_422(client):
+    assert client.patch("/almoxarifados/1", json={"responsavel_id": 999}).status_code == 422
 
 
 def test_desativar(client):

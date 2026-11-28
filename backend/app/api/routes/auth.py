@@ -14,7 +14,12 @@ def registrar(
     repo: RepositorioDeUsuarios = Depends(obter_repositorio_de_usuarios),
 ):
     return servico.registrar_usuario(
-        repo, entrada.nome, entrada.email, entrada.senha, entrada.setor
+        repo,
+        entrada.nome,
+        entrada.email,
+        entrada.senha,
+        entrada.setor,
+        entrada.papel,
     )
 
 
@@ -24,3 +29,9 @@ def login(
     repo: RepositorioDeUsuarios = Depends(obter_repositorio_de_usuarios),
 ):
     return servico.autenticar(repo, entrada.email, entrada.senha)
+
+
+@router.get("/usuarios", response_model=list[UsuarioPublico])
+def listar_usuarios(repo: RepositorioDeUsuarios = Depends(obter_repositorio_de_usuarios)):
+    """Operadores cadastrados, para escolher o responsável por um almoxarifado."""
+    return repo.listar()

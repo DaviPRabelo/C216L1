@@ -23,6 +23,12 @@ def listar(
     return servico.listar_produtos(repo, almoxarifado_id, categoria, abaixo_do_minimo)
 
 
+@router.get("/categorias/disponiveis", response_model=list[str])
+def categorias_disponiveis():
+    """Lista fixa de categorias, para o formulário de cadastro."""
+    return servico.CATEGORIAS_DISPONIVEIS
+
+
 @router.get("/categorias", response_model=list[str])
 def categorias(
     almoxarifado_id: int | None = Query(default=None),

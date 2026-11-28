@@ -6,6 +6,7 @@ import InicioPage from "./pages/InicioPage.jsx";
 import InventarioPage from "./pages/InventarioPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import MovimentacoesPage from "./pages/MovimentacoesPage.jsx";
+import { PAPEIS } from "./validation.js";
 
 // Telas marcadas com `exigeDeposito` só fazem sentido com um almoxarifado escolhido.
 const TELAS = [
@@ -23,6 +24,7 @@ export default function App() {
   if (!operador) return <LoginPage />;
 
   const atual = TELAS.find((t) => t.id === tela) ?? TELAS[0];
+  const papel = PAPEIS.find((p) => p.valor === operador.papel);
   const precisaEscolher = atual.exigeDeposito && !deposito;
 
   function conteudo() {
@@ -64,6 +66,11 @@ export default function App() {
               {operador.nome}
               {operador.setor && ` · ${operador.setor}`}
             </span>
+            {papel && (
+              <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-sky-300">
+                {papel.rotulo}
+              </span>
+            )}
             <button
               type="button"
               onClick={sair}

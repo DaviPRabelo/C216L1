@@ -7,6 +7,7 @@ const API = process.env.E2E_API_URL ?? "http://localhost:8000";
 let sufixo;
 
 const nomeDeposito = () => `E2E Deposito ${sufixo}`;
+const nomeOperador = () => `Operador ${sufixo}`;
 const codigoProduto = () => `E2E-${sufixo}`;
 
 test.beforeEach(async ({ page }, info) => {
@@ -14,7 +15,7 @@ test.beforeEach(async ({ page }, info) => {
 
   await page.goto("/");
   await page.getByRole("button", { name: /criar agora/i }).click();
-  await page.getByLabel("Nome").fill(`Operador ${sufixo}`);
+  await page.getByLabel("Nome").fill(nomeOperador());
   await page.getByLabel("Setor").fill("TI");
   await page.getByLabel("E-mail").fill(`e2e-${sufixo}@almox.com`);
   await page.getByLabel("Senha").fill("senha123");
@@ -39,8 +40,11 @@ async function criarEEntrarNoDeposito(page) {
   await page.getByRole("button", { name: "Novo almoxarifado" }).click();
   await page.getByLabel("Nome").fill(nomeDeposito());
   await page.getByLabel("Local").fill("Galpao E2E");
+  // O operador criado no login é empregado, então pode responder pelo depósito.
+  await page.getByLabel("Responsável").selectOption({ label: `${nomeOperador()} · TI` });
   await page.getByRole("button", { name: "Cadastrar" }).click();
 
+  await expect(page.getByText(`Responsável: ${nomeOperador()}`)).toBeVisible();
   await page.getByRole("button", { name: `Selecionar ${nomeDeposito()}` }).click();
   await expect(page.getByText(`Depósito ativo: ${nomeDeposito()}`)).toBeVisible();
 }
@@ -50,7 +54,9 @@ async function cadastrarProduto(page) {
   await page.getByRole("button", { name: "Novo produto" }).click();
   await page.getByLabel("Código").fill(codigoProduto());
   await page.getByLabel("Nome").fill("Parafuso E2E");
-  await page.getByLabel("Categoria", { exact: true }).fill("Fixadores");
+  await page.getByLabel("Categoria", { exact: true }).selectOption("Fixadores");
+  // O depósito em uso já vem escolhido no seletor do formulário.
+  await expect(page.getByLabel("Almoxarifado")).not.toHaveValue("");
   await page.getByLabel("Estoque mínimo").fill("50");
   await page.getByRole("button", { name: "Cadastrar produto" }).click();
 

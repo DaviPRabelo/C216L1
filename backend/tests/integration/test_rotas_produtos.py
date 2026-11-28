@@ -197,3 +197,19 @@ def test_foto_sobrevive_a_consulta(client):
     lido = client.get(f"/produtos/{criado['id']}").json()
 
     assert lido["foto"] == PNG_MINIMO
+
+
+def test_listar_categorias_disponiveis(client):
+    resposta = client.get("/produtos/categorias/disponiveis")
+
+    assert resposta.status_code == 200
+    corpo = resposta.json()
+    assert "Fixadores" in corpo
+    assert "EPI" in corpo
+    assert len(corpo) == 9
+
+
+def test_criar_produto_com_categoria_fora_da_lista_retorna_422(client):
+    resposta = client.post("/produtos", json={**PRODUTO, "categoria": "Inventada"})
+
+    assert resposta.status_code == 422

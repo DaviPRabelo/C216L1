@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  CATEGORIAS,
   ehValido,
   FOTO_MAXIMA,
   TIPOS,
@@ -17,6 +18,7 @@ const PRODUTO = {
   categoria: "Fixadores",
   unidade: "UN",
   estoque_minimo: "50",
+  almoxarifado_id: "1",
 };
 
 const ENTRADA = { tipo: "ENTRADA", quantidade: "10", responsavel: "Davi" };
@@ -39,6 +41,8 @@ describe("validarProduto", () => {
     ["nome", "N".repeat(101)],
     ["descricao", "D".repeat(201)],
     ["categoria", ""],
+    ["categoria", "Inventada"],
+    ["almoxarifado_id", ""],
     ["unidade", "TONELADA"],
     ["estoque_minimo", ""],
     ["estoque_minimo", "-1"],
@@ -57,6 +61,7 @@ describe("validarProduto", () => {
     });
 
     expect(Object.keys(erros).sort()).toEqual([
+      "almoxarifado_id",
       "categoria",
       "codigo",
       "estoque_minimo",
@@ -67,6 +72,10 @@ describe("validarProduto", () => {
 
   it.each(UNIDADES.map((u) => u.valor))("aceita a unidade %s", (unidade) => {
     expect(validarProduto({ ...PRODUTO, unidade })).toEqual({});
+  });
+
+  it.each(CATEGORIAS)("aceita a categoria %s", (categoria) => {
+    expect(validarProduto({ ...PRODUTO, categoria })).toEqual({});
   });
 });
 

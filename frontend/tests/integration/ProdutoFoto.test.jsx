@@ -6,8 +6,11 @@ import ProdutoForm from "../../src/components/ProdutoForm.jsx";
 
 const PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==";
 
+const DEPOSITOS = [{ id: 1, nome: "Central" }];
+
 const PRODUTO = {
   id: 1,
+  almoxarifado_id: 1,
   codigo: "PAR-001",
   nome: "Parafuso sextavado",
   descricao: "M8",
@@ -103,7 +106,12 @@ describe("ProdutoForm — foto", () => {
     const usuario = userEvent.setup();
     const aoSalvar = vi.fn();
     render(
-      <ProdutoForm produto={{ ...PRODUTO, foto: PNG }} onSalvar={aoSalvar} onCancelar={vi.fn()} />,
+      <ProdutoForm
+        produto={{ ...PRODUTO, foto: PNG }}
+        depositos={DEPOSITOS}
+        onSalvar={aoSalvar}
+        onCancelar={vi.fn()}
+      />,
     );
 
     await usuario.click(screen.getByRole("button", { name: "Salvar alterações" }));

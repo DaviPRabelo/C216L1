@@ -3,6 +3,7 @@ import Painel from "../components/Painel.jsx";
 import ProdutoCard from "../components/ProdutoCard.jsx";
 import ProdutoForm from "../components/ProdutoForm.jsx";
 import { useSessao } from "../context/SessaoContext.jsx";
+import { listarAlmoxarifados } from "../services/almoxarifados.js";
 import {
   atualizarProduto,
   criarProduto,
@@ -16,6 +17,7 @@ export default function EstoquePage() {
 
   const [produtos, setProdutos] = useState([]);
   const [categorias, setCategorias] = useState([]);
+  const [depositos, setDepositos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
 
@@ -45,12 +47,18 @@ export default function EstoquePage() {
     carregar();
   }, [carregar]);
 
+  // Os depósitos ativos alimentam o seletor do formulário de cadastro.
+  useEffect(() => {
+    listarAlmoxarifados({ apenasAtivos: true })
+      .then(setDepositos)
+      .catch((falha) => setErro(falha.message));
+  }, []);
+
   async function salvar(dados) {
     setErro(null);
-    const corpo = { ...dados, almoxarifado_id: deposito.id };
     try {
-      if (formulario === "novo") await criarProduto(corpo);
-      else await atualizarProduto(formulario.id, corpo);
+      if (formulario === "novo") await criarProduto(dados);
+      else await atualizarProduto(formulario.id, dados);
       setFormulario(null);
       await carregar();
     } catch (falha) {
@@ -136,6 +144,8 @@ export default function EstoquePage() {
       {formulario && (
         <ProdutoForm
           produto={formulario === "novo" ? null : formulario}
+          depositos={depositos}
+          depositoAtivoId={deposito.id}
           onSalvar={salvar}
           onCancelar={() => setFormulario(null)}
         />

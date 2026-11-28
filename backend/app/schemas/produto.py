@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
-from app.models.enums import UnidadeMedida
+from app.models.enums import CategoriaProduto, UnidadeMedida
 
 
 class ProdutoEntrada(BaseModel):
@@ -8,7 +8,7 @@ class ProdutoEntrada(BaseModel):
     codigo: str
     nome: str
     descricao: str = ""
-    categoria: str
+    categoria: CategoriaProduto
     unidade: UnidadeMedida
     estoque_minimo: int = 0
     foto: str = ""
@@ -19,7 +19,7 @@ class ProdutoAtualizacao(BaseModel):
     codigo: str | None = None
     nome: str | None = None
     descricao: str | None = None
-    categoria: str | None = None
+    categoria: CategoriaProduto | None = None
     unidade: UnidadeMedida | None = None
     estoque_minimo: int | None = None
     foto: str | None = None

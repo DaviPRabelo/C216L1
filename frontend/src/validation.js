@@ -5,6 +5,27 @@ export const UNIDADES = [
   { valor: "L", rotulo: "Litro" },
 ];
 
+// Mesma lista do backend (CategoriaProduto); o formulario so oferece estas.
+export const CATEGORIAS = [
+  "Ferramentas",
+  "Fixadores",
+  "EPI",
+  "Elétrica",
+  "Hidráulica",
+  "Limpeza",
+  "Papelaria",
+  "Construção",
+  "Outros",
+];
+
+// Hierarquia de acesso. Hoje classifica o operador; quem cuida de um
+// almoxarifado precisa ser EMPREGADO.
+export const PAPEIS = [
+  { valor: "EMPREGADO", rotulo: "Empregado" },
+  { valor: "GERENTE", rotulo: "Gerente" },
+  { valor: "ADMIN", rotulo: "Administrador" },
+];
+
 export const TIPOS = [
   { valor: "ENTRADA", rotulo: "Entrada" },
   { valor: "SAIDA", rotulo: "Saída" },
@@ -34,6 +55,7 @@ export function validarProduto({
   unidade,
   estoque_minimo,
   foto,
+  almoxarifado_id,
 }) {
   const erros = {};
 
@@ -45,8 +67,9 @@ export function validarProduto({
 
   if (texto(descricao).length > 200) erros.descricao = "A descrição deve ter até 200 caracteres";
 
-  if (!texto(categoria)) erros.categoria = "A categoria é obrigatória";
-  else if (texto(categoria).length > 50) erros.categoria = "A categoria deve ter até 50 caracteres";
+  if (!CATEGORIAS.includes(texto(categoria))) erros.categoria = "Escolha uma categoria";
+
+  if (!Number(almoxarifado_id)) erros.almoxarifado_id = "Escolha o almoxarifado";
 
   if (!UNIDADES.some((u) => u.valor === unidade)) erros.unidade = "Escolha uma unidade";
 

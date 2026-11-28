@@ -7,13 +7,15 @@ import {
   listarAlmoxarifados,
   removerAlmoxarifado,
 } from "../services/almoxarifados.js";
+import { listarOperadores } from "../services/auth.js";
 
-const VAZIO = { nome: "", local: "", responsavel: "" };
+const VAZIO = { nome: "", local: "", responsavel_id: "" };
 
 export default function AlmoxarifadosPage({ aoEscolher }) {
   const { deposito, selecionarDeposito } = useSessao();
 
   const [depositos, setDepositos] = useState([]);
+  const [empregados, setEmpregados] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
 
@@ -38,6 +40,13 @@ export default function AlmoxarifadosPage({ aoEscolher }) {
     carregar();
   }, [carregar]);
 
+  // Só empregados podem responder por um depósito; admin e gerente administram.
+  useEffect(() => {
+    listarOperadores()
+      .then((lista) => setEmpregados(lista.filter((u) => u.papel === "EMPREGADO")))
+      .catch((falha) => setErro(falha.message));
+  }, []);
+
   function abrirNovo() {
     setEditando(null);
     setValores(VAZIO);
@@ -46,7 +55,11 @@ export default function AlmoxarifadosPage({ aoEscolher }) {
 
   function abrirEdicao(item) {
     setEditando(item);
-    setValores({ nome: item.nome, local: item.local, responsavel: item.responsavel });
+    setValores({
+      nome: item.nome,
+      local: item.local,
+      responsavel_id: item.responsavel_id ? String(item.responsavel_id) : "",
+    });
     setMostrandoForm(true);
   }
 
@@ -57,9 +70,14 @@ export default function AlmoxarifadosPage({ aoEscolher }) {
       setErro("O nome do almoxarifado é obrigatório");
       return;
     }
+    const corpo = {
+      nome: valores.nome,
+      local: valores.local,
+      responsavel_id: valores.responsavel_id ? Number(valores.responsavel_id) : null,
+    };
     try {
-      if (editando) await atualizarAlmoxarifado(editando.id, valores);
-      else await criarAlmoxarifado(valores);
+      if (editando) await atualizarAlmoxarifado(editando.id, corpo);
+      else await criarAlmoxarifado(corpo);
       setMostrandoForm(false);
       await carregar();
     } catch (falha) {
@@ -147,13 +165,20 @@ export default function AlmoxarifadosPage({ aoEscolher }) {
               />
             </Campo>
             <Campo id="responsavel-almox" rotulo="Responsável">
-              <input
+              <select
                 id="responsavel-almox"
-                type="text"
-                value={valores.responsavel}
-                onChange={(e) => setValores({ ...valores, responsavel: e.target.value })}
+                value={valores.responsavel_id}
+                onChange={(e) => setValores({ ...valores, responsavel_id: e.target.value })}
                 className={CAMPO}
-              />
+              >
+                <option value="">Sem responsável</option>
+                {empregados.map((u) => (
+                  <option key={u.id} value={String(u.id)}>
+                    {u.nome}
+                    {u.setor && ` · ${u.setor}`}
+                  </option>
+                ))}
+              </select>
             </Campo>
           </div>
           <div className="flex gap-2">
@@ -228,8 +253,8 @@ export default function AlmoxarifadosPage({ aoEscolher }) {
                   )}
                 </div>
                 {item.local && <p className="text-sm text-slate-600">{item.local}</p>}
-                {item.responsavel && (
-                  <p className="text-xs text-slate-500">Responsável: {item.responsavel}</p>
+                {item.responsavel_nome && (
+                  <p className="text-xs text-slate-500">Responsável: {item.responsavel_nome}</p>
                 )}
 
                 <dl className="mt-3 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 text-center">

@@ -5,7 +5,7 @@ from sqlalchemy import ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
-from app.models.enums import UnidadeMedida
+from app.models.enums import CategoriaProduto, UnidadeMedida
 
 if TYPE_CHECKING:
     from app.models.movimentacao import MovimentacaoORM
@@ -23,7 +23,16 @@ class ProdutoORM(Base):
     codigo: Mapped[str] = mapped_column(String(20), nullable=False, unique=True, index=True)
     nome: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     descricao: Mapped[str] = mapped_column(String(200), nullable=False, default="")
-    categoria: Mapped[str] = mapped_column(String(50), nullable=False)
+    categoria: Mapped[CategoriaProduto] = mapped_column(
+        SAEnum(
+            CategoriaProduto,
+            native_enum=False,
+            length=20,
+            values_callable=lambda enum: [membro.value for membro in enum],
+        ),
+        nullable=False,
+        index=True,
+    )
     unidade: Mapped[UnidadeMedida] = mapped_column(
         SAEnum(
             UnidadeMedida,

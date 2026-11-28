@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import EstoquePage from "../../src/pages/EstoquePage.jsx";
+import { listarAlmoxarifados } from "../../src/services/almoxarifados.js";
 import {
   atualizarProduto,
   criarProduto,
@@ -9,6 +10,10 @@ import {
   listarProdutos,
   removerProduto,
 } from "../../src/services/produtos.js";
+
+vi.mock("../../src/services/almoxarifados.js", () => ({
+  listarAlmoxarifados: vi.fn(),
+}));
 
 vi.mock("../../src/services/produtos.js", () => ({
   listarProdutos: vi.fn(),
@@ -42,12 +47,16 @@ beforeEach(() => {
   vi.clearAllMocks();
   listarProdutos.mockResolvedValue([]);
   listarCategorias.mockResolvedValue([]);
+  listarAlmoxarifados.mockResolvedValue([
+    { id: 1, nome: "Central" },
+    { id: 2, nome: "Obras" },
+  ]);
 });
 
 async function preencherProduto(usuario) {
   await usuario.type(screen.getByLabelText("Código"), "LUV-001");
   await usuario.type(screen.getByLabelText("Nome"), "Luva");
-  await usuario.type(screen.getByLabelText("Categoria"), "EPI");
+  await usuario.selectOptions(screen.getByLabelText("Categoria"), "EPI");
   const minimo = screen.getByLabelText("Estoque mínimo");
   await usuario.clear(minimo);
   await usuario.type(minimo, "5");
@@ -92,6 +101,22 @@ describe("EstoquePage", () => {
 
     expect(criarProduto).toHaveBeenCalledWith(
       expect.objectContaining({ codigo: "LUV-001", almoxarifado_id: 1 }),
+    );
+  });
+
+  it("permite cadastrar em outro almoxarifado", async () => {
+    const usuario = userEvent.setup();
+    criarProduto.mockResolvedValue({ ...PARAFUSO, id: 2 });
+    render(<EstoquePage />);
+    await screen.findByText("Nenhum produto encontrado neste almoxarifado.");
+
+    await usuario.click(screen.getByRole("button", { name: "Novo produto" }));
+    await preencherProduto(usuario);
+    await usuario.selectOptions(screen.getByLabelText("Almoxarifado"), "2");
+    await usuario.click(screen.getByRole("button", { name: "Cadastrar produto" }));
+
+    expect(criarProduto).toHaveBeenCalledWith(
+      expect.objectContaining({ codigo: "LUV-001", almoxarifado_id: 2 }),
     );
   });
 

@@ -106,7 +106,7 @@ def deposito(request, sessao):
     if "engine_de_teste" not in request.fixturenames:
         return None
     return RepositorioDeAlmoxarifados(sessao).adicionar(
-        nome="Central", local="Galpao A", responsavel="Davi", ativo=True
+        nome="Central", local="Galpao A", responsavel_id=None, ativo=True
     )
 
 

@@ -22,6 +22,10 @@ export function listarCategorias(almoxarifadoId = null) {
   return requisitar(`/produtos/categorias${consulta ? `?${consulta}` : ""}`);
 }
 
+export function listarCategoriasDisponiveis() {
+  return requisitar("/produtos/categorias/disponiveis");
+}
+
 export function criarProduto(dados) {
   return requisitar("/produtos", comCorpo("POST", dados));
 }

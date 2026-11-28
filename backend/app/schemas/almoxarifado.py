@@ -4,14 +4,14 @@ from pydantic import BaseModel, ConfigDict
 class AlmoxarifadoEntrada(BaseModel):
     nome: str
     local: str = ""
-    responsavel: str = ""
+    responsavel_id: int | None = None
     ativo: bool = True
 
 
 class AlmoxarifadoAtualizacao(BaseModel):
     nome: str | None = None
     local: str | None = None
-    responsavel: str | None = None
+    responsavel_id: int | None = None
     ativo: bool | None = None
 
 
@@ -19,6 +19,7 @@ class Almoxarifado(AlmoxarifadoEntrada):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    responsavel_nome: str
 
 
 class AlmoxarifadoResumo(Almoxarifado):

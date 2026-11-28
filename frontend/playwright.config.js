@@ -5,7 +5,11 @@ const URL_BASE = `http://localhost:${PORTA}`;
 
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: true,
+  // Os testes conversam com o backend e o banco reais. Em paralelo eles
+  // competem pela mesma base e o front chega a re-renderizar no meio de um
+  // preenchimento, por isso a suíte roda em série (são poucos segundos).
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? "list" : "html",

@@ -22,3 +22,25 @@ class StatusInventario(str, Enum):
 
     ABERTO = "ABERTO"
     FECHADO = "FECHADO"
+
+
+class PapelUsuario(str, Enum):
+    """Nível do operador na hierarquia do almoxarifado."""
+
+    ADMIN = "ADMIN"
+    GERENTE = "GERENTE"
+    EMPREGADO = "EMPREGADO"
+
+
+class CategoriaProduto(str, Enum):
+    """Categorias previstas para os itens do almoxarifado."""
+
+    FERRAMENTAS = "Ferramentas"
+    FIXADORES = "Fixadores"
+    EPI = "EPI"
+    ELETRICA = "Elétrica"
+    HIDRAULICA = "Hidráulica"
+    LIMPEZA = "Limpeza"
+    PAPELARIA = "Papelaria"
+    CONSTRUCAO = "Construção"
+    OUTROS = "Outros"

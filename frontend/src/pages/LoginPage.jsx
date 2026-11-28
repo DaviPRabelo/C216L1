@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSessao } from "../context/SessaoContext.jsx";
 import { entrar as autenticar, cadastrar } from "../services/auth.js";
-import { ehValido, validarLogin } from "../validation.js";
+import { ehValido, PAPEIS, validarLogin } from "../validation.js";
 
 const CAMPO =
   "w-full rounded border border-slate-300 px-3 py-2 focus:border-sky-500 focus:outline-none";
@@ -10,7 +10,13 @@ const ROTULO = "mb-1 block text-sm font-medium text-slate-700";
 export default function LoginPage() {
   const { entrar } = useSessao();
   const [criandoConta, setCriandoConta] = useState(false);
-  const [valores, setValores] = useState({ nome: "", setor: "", email: "", senha: "" });
+  const [valores, setValores] = useState({
+    nome: "",
+    setor: "",
+    email: "",
+    senha: "",
+    papel: "EMPREGADO",
+  });
   const [erros, setErros] = useState({});
   const [falha, setFalha] = useState(null);
   const [enviando, setEnviando] = useState(false);
@@ -36,6 +42,7 @@ export default function LoginPage() {
             setor: valores.setor.trim(),
             email: valores.email.trim(),
             senha: valores.senha,
+            papel: valores.papel,
           })
         : await autenticar(valores.email.trim(), valores.senha);
       entrar(operador);
@@ -90,6 +97,27 @@ export default function LoginPage() {
                   onChange={(e) => aoMudar("setor", e.target.value)}
                   className={CAMPO}
                 />
+              </div>
+
+              <div>
+                <label htmlFor="papel" className={ROTULO}>
+                  Papel
+                </label>
+                <select
+                  id="papel"
+                  value={valores.papel}
+                  onChange={(e) => aoMudar("papel", e.target.value)}
+                  className={CAMPO}
+                >
+                  {PAPEIS.map((p) => (
+                    <option key={p.valor} value={p.valor}>
+                      {p.rotulo}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-slate-500">
+                  Só empregados podem responder por um almoxarifado.
+                </p>
               </div>
             </>
           )}

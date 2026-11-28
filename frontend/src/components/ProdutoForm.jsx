@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ehValido, UNIDADES, validarProduto } from "../validation.js";
+import { CATEGORIAS, ehValido, UNIDADES, validarProduto } from "../validation.js";
 import { CAMPO, Campo } from "./Campo.jsx";
 
 const VAZIO = {
@@ -10,9 +10,16 @@ const VAZIO = {
   unidade: "UN",
   estoque_minimo: "0",
   foto: "",
+  almoxarifado_id: "",
 };
 
-export default function ProdutoForm({ produto, onSalvar, onCancelar }) {
+export default function ProdutoForm({
+  produto,
+  depositos = [],
+  depositoAtivoId = null,
+  onSalvar,
+  onCancelar,
+}) {
   const [valores, setValores] = useState(VAZIO);
   const [erros, setErros] = useState({});
   const [enviando, setEnviando] = useState(false);
@@ -24,11 +31,13 @@ export default function ProdutoForm({ produto, onSalvar, onCancelar }) {
             ...produto,
             estoque_minimo: String(produto.estoque_minimo),
             descricao: produto.descricao ?? "",
+            almoxarifado_id: String(produto.almoxarifado_id ?? ""),
           }
-        : VAZIO,
+        : // Num cadastro novo o depósito em uso já vem escolhido, mas dá para trocar.
+          { ...VAZIO, almoxarifado_id: depositoAtivoId ? String(depositoAtivoId) : "" },
     );
     setErros({});
-  }, [produto]);
+  }, [produto, depositoAtivoId]);
 
   function lerArquivo(evento) {
     const arquivo = evento.target.files?.[0];
@@ -54,10 +63,11 @@ export default function ProdutoForm({ produto, onSalvar, onCancelar }) {
         codigo: valores.codigo.trim(),
         nome: valores.nome.trim(),
         descricao: valores.descricao.trim(),
-        categoria: valores.categoria.trim(),
+        categoria: valores.categoria,
         unidade: valores.unidade,
         estoque_minimo: Number(valores.estoque_minimo),
         foto: valores.foto,
+        almoxarifado_id: Number(valores.almoxarifado_id),
       });
     } catch {
       // A página exibe a mensagem; o formulário preserva o que foi digitado.
@@ -94,13 +104,35 @@ export default function ProdutoForm({ produto, onSalvar, onCancelar }) {
         </Campo>
 
         <Campo id="categoria" rotulo="Categoria" erro={erros.categoria}>
-          <input
+          <select
             id="categoria"
-            type="text"
             value={valores.categoria}
             onChange={(e) => aoMudar("categoria", e.target.value)}
             className={CAMPO}
-          />
+          >
+            <option value="">Selecione uma categoria</option>
+            {CATEGORIAS.map((nome) => (
+              <option key={nome} value={nome}>
+                {nome}
+              </option>
+            ))}
+          </select>
+        </Campo>
+
+        <Campo id="almoxarifado" rotulo="Almoxarifado" erro={erros.almoxarifado_id}>
+          <select
+            id="almoxarifado"
+            value={valores.almoxarifado_id}
+            onChange={(e) => aoMudar("almoxarifado_id", e.target.value)}
+            className={CAMPO}
+          >
+            <option value="">Selecione um almoxarifado</option>
+            {depositos.map((item) => (
+              <option key={item.id} value={String(item.id)}>
+                {item.nome}
+              </option>
+            ))}
+          </select>
         </Campo>
 
         <Campo id="unidade" rotulo="Unidade" erro={erros.unidade}>

@@ -8,12 +8,17 @@ import {
   listarAlmoxarifados,
   removerAlmoxarifado,
 } from "../../src/services/almoxarifados.js";
+import { listarOperadores } from "../../src/services/auth.js";
 
 vi.mock("../../src/services/almoxarifados.js", () => ({
   listarAlmoxarifados: vi.fn(),
   criarAlmoxarifado: vi.fn(),
   atualizarAlmoxarifado: vi.fn(),
   removerAlmoxarifado: vi.fn(),
+}));
+
+vi.mock("../../src/services/auth.js", () => ({
+  listarOperadores: vi.fn(),
 }));
 
 const selecionarDeposito = vi.fn();
@@ -30,16 +35,23 @@ const CENTRAL = {
   id: 1,
   nome: "Central",
   local: "Galpao A",
-  responsavel: "Davi",
+  responsavel_id: null,
+  responsavel_nome: "",
   ativo: true,
   total_produtos: 4,
   produtos_em_falta: 1,
   unidades_em_estoque: 120,
 };
 
+const OPERADORES = [
+  { id: 7, nome: "Joana", setor: "Obras", papel: "EMPREGADO" },
+  { id: 8, nome: "Ana", setor: "Compras", papel: "GERENTE" },
+];
+
 beforeEach(() => {
   vi.clearAllMocks();
   listarAlmoxarifados.mockResolvedValue([CENTRAL]);
+  listarOperadores.mockResolvedValue(OPERADORES);
 });
 
 describe("AlmoxarifadosPage", () => {
@@ -86,7 +98,45 @@ describe("AlmoxarifadosPage", () => {
     await usuario.click(screen.getByRole("button", { name: "Cadastrar" }));
 
     expect(criarAlmoxarifado).toHaveBeenCalledWith(
-      expect.objectContaining({ nome: "Obras", local: "Patio 2" }),
+      expect.objectContaining({ nome: "Obras", local: "Patio 2", responsavel_id: null }),
+    );
+  });
+
+  it("mostra o nome do responsável do depósito", async () => {
+    listarAlmoxarifados.mockResolvedValue([
+      { ...CENTRAL, responsavel_id: 7, responsavel_nome: "Joana" },
+    ]);
+    render(<AlmoxarifadosPage />);
+
+    expect(await screen.findByText("Responsável: Joana")).toBeInTheDocument();
+  });
+
+  it("só oferece empregados como responsável", async () => {
+    const usuario = userEvent.setup();
+    render(<AlmoxarifadosPage />);
+    await screen.findByRole("heading", { name: "Central" });
+
+    await usuario.click(screen.getByRole("button", { name: "Novo almoxarifado" }));
+
+    const seletor = screen.getByLabelText("Responsável");
+    expect(screen.getByRole("option", { name: /Joana/ })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: /Ana/ })).not.toBeInTheDocument();
+    expect(seletor).toHaveValue("");
+  });
+
+  it("cadastra escolhendo o empregado responsável", async () => {
+    const usuario = userEvent.setup();
+    criarAlmoxarifado.mockResolvedValue({ ...CENTRAL, id: 2, nome: "Obras" });
+    render(<AlmoxarifadosPage />);
+    await screen.findByRole("heading", { name: "Central" });
+
+    await usuario.click(screen.getByRole("button", { name: "Novo almoxarifado" }));
+    await usuario.type(screen.getByLabelText("Nome"), "Obras");
+    await usuario.selectOptions(screen.getByLabelText("Responsável"), "7");
+    await usuario.click(screen.getByRole("button", { name: "Cadastrar" }));
+
+    expect(criarAlmoxarifado).toHaveBeenCalledWith(
+      expect.objectContaining({ nome: "Obras", responsavel_id: 7 }),
     );
   });
 

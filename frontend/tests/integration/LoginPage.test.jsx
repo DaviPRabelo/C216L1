@@ -110,6 +110,21 @@ describe("LoginPage", () => {
       setor: "TI",
       email: "davi@almox.com",
       senha: "senha123",
+      papel: "EMPREGADO",
     });
+  });
+
+  it("cadastra escolhendo outro papel", async () => {
+    const usuario = userEvent.setup();
+    cadastrar.mockResolvedValue(OPERADOR);
+    montar();
+
+    await usuario.click(screen.getByRole("button", { name: /criar agora/i }));
+    await usuario.type(screen.getByLabelText("Nome"), "Ana");
+    await usuario.selectOptions(screen.getByLabelText("Papel"), "GERENTE");
+    await preencher(usuario);
+    await usuario.click(screen.getByRole("button", { name: "Criar acesso" }));
+
+    expect(cadastrar).toHaveBeenCalledWith(expect.objectContaining({ papel: "GERENTE" }));
   });
 });

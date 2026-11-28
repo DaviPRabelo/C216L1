@@ -6,6 +6,7 @@ from app.errors import (
     DadosInvalidos,
     NomeDeAlmoxarifadoJaExiste,
 )
+from app.models.enums import PapelUsuario
 from app.services import almoxarifado as servico
 from tests.conftest import ALMOXARIFADO_PADRAO
 
@@ -19,11 +20,9 @@ def test_criar_almoxarifado(repo_almoxarifados):
 
 
 def test_campos_perdem_espacos(repo_almoxarifados):
-    criado = servico.criar_almoxarifado(
-        repo_almoxarifados, nome="  Obras  ", local="  Patio  ", responsavel="  Ana  "
-    )
+    criado = servico.criar_almoxarifado(repo_almoxarifados, nome="  Obras  ", local="  Patio  ")
 
-    assert (criado.nome, criado.local, criado.responsavel) == ("Obras", "Patio", "Ana")
+    assert (criado.nome, criado.local) == ("Obras", "Patio")
 
 
 @pytest.mark.parametrize(
@@ -33,7 +32,6 @@ def test_campos_perdem_espacos(repo_almoxarifados):
         ("nome", "   "),
         ("nome", "N" * 81),
         ("local", "L" * 121),
-        ("responsavel", "R" * 101),
     ],
 )
 def test_criar_invalido(repo_almoxarifados, campo, valor):
@@ -78,7 +76,6 @@ def test_atualizar_preserva_campos_nao_enviados(repo_almoxarifados):
 
     assert atualizado.local == "Galpao B"
     assert atualizado.nome == "Central"
-    assert atualizado.responsavel == "Davi"
 
 
 def test_atualizar_mantendo_o_proprio_nome(repo_almoxarifados):
@@ -119,3 +116,51 @@ def test_remover_com_produtos_e_recusado(repo_almoxarifados):
 
     with pytest.raises(AlmoxarifadoComProdutos):
         servico.remover_almoxarifado(repo_almoxarifados, criado.id)
+
+
+def test_responsavel_empregado_e_aceito(repo_almoxarifados, repo_usuarios):
+    empregado = repo_usuarios.adicionar("Davi", "davi@almox.com", "TI", "hash")
+
+    criado = servico.criar_almoxarifado(
+        repo_almoxarifados,
+        nome="Obras",
+        responsavel_id=empregado.id,
+        repo_usuarios=repo_usuarios,
+    )
+
+    assert criado.responsavel_id == empregado.id
+
+
+@pytest.mark.parametrize("papel", [PapelUsuario.ADMIN, PapelUsuario.GERENTE])
+def test_responsavel_precisa_ser_empregado(repo_almoxarifados, repo_usuarios, papel):
+    """Admin e gerente administram o sistema; o estoque fica com o empregado."""
+    chefia = repo_usuarios.adicionar("Ana", "ana@almox.com", "Compras", "hash", papel)
+
+    with pytest.raises(DadosInvalidos):
+        servico.criar_almoxarifado(
+            repo_almoxarifados,
+            nome="Obras",
+            responsavel_id=chefia.id,
+            repo_usuarios=repo_usuarios,
+        )
+
+
+def test_responsavel_inexistente_e_recusado(repo_almoxarifados, repo_usuarios):
+    with pytest.raises(DadosInvalidos):
+        servico.criar_almoxarifado(
+            repo_almoxarifados, nome="Obras", responsavel_id=999, repo_usuarios=repo_usuarios
+        )
+
+
+def test_atualizar_troca_o_responsavel(repo_almoxarifados, repo_usuarios):
+    criado = servico.criar_almoxarifado(repo_almoxarifados, **ALMOXARIFADO_PADRAO)
+    empregado = repo_usuarios.adicionar("Davi", "davi@almox.com", "TI", "hash")
+
+    atualizado = servico.atualizar_almoxarifado(
+        repo_almoxarifados,
+        criado.id,
+        responsavel_id=empregado.id,
+        repo_usuarios=repo_usuarios,
+    )
+
+    assert atualizado.responsavel_id == empregado.id

@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Depends, Query
 
-from app.api.dependencias import obter_repositorio_de_almoxarifados
+from app.api.dependencias import (
+    obter_repositorio_de_almoxarifados,
+    obter_repositorio_de_usuarios,
+)
 from app.repositories.almoxarifado import RepositorioDeAlmoxarifados
+from app.repositories.usuario import RepositorioDeUsuarios
 from app.schemas.almoxarifado import (
     Almoxarifado,
     AlmoxarifadoAtualizacao,
@@ -29,9 +33,18 @@ def obter(almoxarifado_id: int, repo: Repo = Depends(obter_repositorio_de_almoxa
 
 
 @router.post("", response_model=Almoxarifado, status_code=201)
-def criar(entrada: AlmoxarifadoEntrada, repo: Repo = Depends(obter_repositorio_de_almoxarifados)):
+def criar(
+    entrada: AlmoxarifadoEntrada,
+    repo: Repo = Depends(obter_repositorio_de_almoxarifados),
+    repo_usuarios: RepositorioDeUsuarios = Depends(obter_repositorio_de_usuarios),
+):
     return servico.criar_almoxarifado(
-        repo, entrada.nome, entrada.local, entrada.responsavel, entrada.ativo
+        repo,
+        entrada.nome,
+        entrada.local,
+        entrada.responsavel_id,
+        entrada.ativo,
+        repo_usuarios=repo_usuarios,
     )
 
 
@@ -40,14 +53,16 @@ def substituir(
     almoxarifado_id: int,
     entrada: AlmoxarifadoEntrada,
     repo: Repo = Depends(obter_repositorio_de_almoxarifados),
+    repo_usuarios: RepositorioDeUsuarios = Depends(obter_repositorio_de_usuarios),
 ):
     return servico.atualizar_almoxarifado(
         repo,
         almoxarifado_id,
         nome=entrada.nome,
         local=entrada.local,
-        responsavel=entrada.responsavel,
+        responsavel_id=entrada.responsavel_id,
         ativo=entrada.ativo,
+        repo_usuarios=repo_usuarios,
     )
 
 
@@ -56,9 +71,13 @@ def atualizar(
     almoxarifado_id: int,
     entrada: AlmoxarifadoAtualizacao,
     repo: Repo = Depends(obter_repositorio_de_almoxarifados),
+    repo_usuarios: RepositorioDeUsuarios = Depends(obter_repositorio_de_usuarios),
 ):
     return servico.atualizar_almoxarifado(
-        repo, almoxarifado_id, **entrada.model_dump(exclude_unset=True)
+        repo,
+        almoxarifado_id,
+        repo_usuarios=repo_usuarios,
+        **entrada.model_dump(exclude_unset=True),
     )
 
 

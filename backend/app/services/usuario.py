@@ -1,4 +1,5 @@
 from app.errors import CredenciaisInvalidas, DadosInvalidos, EmailJaExiste
+from app.models.enums import PapelUsuario
 from app.models.usuario import UsuarioORM
 from app.repositories.usuario import RepositorioDeUsuarios
 from app.security import SENHA_MAXIMA, conferir_senha, gerar_hash
@@ -31,14 +32,24 @@ def _validar(nome: str, email: str, setor: str, senha: str) -> tuple[str, str, s
 
 
 def registrar_usuario(
-    repo: RepositorioDeUsuarios, nome: str, email: str, senha: str, setor: str = ""
+    repo: RepositorioDeUsuarios,
+    nome: str,
+    email: str,
+    senha: str,
+    setor: str = "",
+    papel: PapelUsuario = PapelUsuario.EMPREGADO,
 ) -> UsuarioORM:
     nome, email, setor = _validar(nome, email, setor, senha)
 
     if repo.buscar_por_email(email) is not None:
         raise EmailJaExiste(email)
 
-    return repo.adicionar(nome, email, setor, gerar_hash(senha))
+    try:
+        papel = PapelUsuario(papel)
+    except ValueError as erro:
+        raise DadosInvalidos("Papel de usuário inválido") from erro
+
+    return repo.adicionar(nome, email, setor, gerar_hash(senha), papel)
 
 
 def autenticar(repo: RepositorioDeUsuarios, email: str, senha: str) -> UsuarioORM:

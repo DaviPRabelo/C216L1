@@ -22,16 +22,24 @@ que o saldo é recusada pelo servidor com a quantidade disponível na mensagem.
 
 **Operadores**
 - Cadastro e login com senha armazenada em hash (bcrypt)
+- Hierarquia de papéis: **administrador**, **gerente** e **empregado**
+- O papel é escolhido no cadastro e aparece ao lado do nome no cabeçalho
 - O operador logado preenche automaticamente o responsável das movimentações
 
 **Almoxarifados**
 - Cadastro, edição, ativação/desativação e exclusão
+- O responsável é escolhido entre os operadores cadastrados, e precisa ser um
+  **empregado**: administrador e gerente administram o sistema, quem responde
+  pelo estoque é quem cuida dele no dia a dia
 - Cada depósito exibe total de produtos, unidades em estoque e itens em falta
 - O depósito escolhido fica ativo na sessão e filtra todas as demais telas
 - Não é possível excluir um depósito que ainda tem produtos
 
 **Produtos**
-- CRUD completo pela interface, dentro do depósito ativo
+- CRUD completo pela interface
+- O almoxarifado é escolhido no formulário; o depósito em uso já vem marcado
+- Categoria vinda de uma **lista fixa** (Ferramentas, Fixadores, EPI, Elétrica,
+  Hidráulica, Limpeza, Papelaria, Construção, Outros), e não texto livre
 - Código único, unidade de medida (UN, CX, KG, L) e estoque mínimo
 - Alerta visual quando o saldo fica abaixo do mínimo
 - Foto do produto, escolhida do computador e exibida no cartão
@@ -123,9 +131,11 @@ Para zerar o banco, use `docker compose down -v` — o `-v` remove o volume.
 ### Primeiro acesso
 
 1. Abra http://localhost:5173
-2. Clique em **Não tenho acesso — criar agora** e cadastre um operador
-3. Vá em **Almoxarifados**, crie um depósito e clique em **Selecionar**
-4. Em **Estoque**, cadastre um produto
+2. Clique em **Não tenho acesso — criar agora**, cadastre um operador e escolha
+   o papel (use **Empregado** se quiser que ele possa responder por um depósito)
+3. Vá em **Almoxarifados**, crie um depósito, escolha o responsável e clique em
+   **Selecionar**
+4. Em **Estoque**, cadastre um produto escolhendo a categoria e o almoxarifado
 5. Em **Movimentações**, escolha o produto e registre uma entrada
 
 ## Migrações
@@ -228,6 +238,17 @@ diretamente, sem passar pela interface.
 duplicado devolvem `409`: o corpo da requisição está correto, o conflito é com o
 estado do banco.
 
+**Categorias fixas em vez de texto livre.** A categoria virou um enum
+compartilhado entre banco, API e formulário. Texto livre deixava o mesmo item
+cadastrado como "EPI", "epi" e "E.P.I.", o que quebrava o filtro por categoria.
+A lista fica exposta em `GET /produtos/categorias/disponiveis`, então a
+interface não mantém uma cópia que pode divergir do backend.
+
+**Responsável do almoxarifado como vínculo, não como texto.** O campo passou a
+ser uma chave estrangeira para `usuarios`, com `ON DELETE SET NULL`. Assim o
+nome exibido acompanha o cadastro do operador em vez de envelhecer numa string,
+e a regra "o responsável é um empregado" pode ser verificada no serviço.
+
 **Exceções de domínio traduzidas num lugar só.** Um tratador registrado na
 aplicação mapeia cada exceção para o código HTTP correspondente, em vez de
 `try/except` repetido em cada rota.
@@ -246,6 +267,13 @@ arquivos. Isso evita infraestrutura extra e mantém a foto versionada junto do
 produto, mas a listagem carrega as imagens no mesmo JSON dos produtos — o que
 funciona bem na escala deste projeto e não escalaria para milhares de itens.
 O tamanho é limitado a ~400 KB por imagem, validado no navegador e no servidor.
+
+**Os papéis classificam, não bloqueiam.** Administrador, gerente e empregado
+descrevem o operador e definem quem pode ser responsável por um almoxarifado,
+mas **nenhuma ação é negada por papel**: qualquer operador logado cadastra,
+movimenta e inventaria. Autorização por papel depende de uma identidade
+confiável no servidor, que este projeto não tem (ver o parágrafo abaixo) — fazer
+o bloqueio só na interface daria uma falsa sensação de controle.
 
 O login valida as credenciais contra o banco e guarda o operador no navegador,
 mas **não emite token**: as rotas da API continuam abertas a quem as chamar
